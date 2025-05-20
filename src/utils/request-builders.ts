@@ -1,57 +1,11 @@
 import type { forms_v1 } from "@googleapis/forms";
-
-/**
- * アイテム作成リクエストを生成するためのパラメータ
- */
-export type CreateItemRequestParams = {
-  title: string;
-  description?: string;
-  index?: number;
-  itemType: "text" | "question" | "pageBreak" | "questionGroup";
-  questionType?: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
-  options?: string[];
-  required?: boolean;
-  includeOther?: boolean;
-  // question_group専用
-  rows?: { title: string; required?: boolean }[];
-  isGrid?: boolean;
-  columns?: string[];
-  gridType?: "CHECKBOX" | "RADIO";
-  shuffleQuestions?: boolean;
-};
-
-/**
- * アイテム更新リクエストを生成するためのパラメータ
- */
-export type UpdateItemRequestParams = {
-  index: number;
-  title?: string;
-  description?: string;
-  required?: boolean;
-};
-
-/**
- * アイテム削除リクエストを生成するためのパラメータ
- */
-export type DeleteItemRequestParams = {
-  index: number;
-};
-
-/**
- * アイテム移動リクエストを生成するためのパラメータ
- */
-export type MoveItemRequestParams = {
-  index: number;
-  newIndex: number;
-};
-
-/**
- * フォーム情報更新リクエストを生成するためのパラメータ
- */
-export type UpdateFormInfoRequestParams = {
-  title?: string;
-  description?: string;
-};
+import type {
+  CreateItemRequestParams,
+  UpdateItemRequestParams,
+  DeleteItemRequestParams,
+  MoveItemRequestParams,
+  UpdateFormInfoRequestParams,
+} from "../types/request-types.js";
 
 /**
  * リクエストビルダー：アイテムの作成リクエストを生成
@@ -108,7 +62,7 @@ export function buildCreateItemRequest(
             throw new Error("選択式質問には選択肢が必要です");
           }
 
-          const optionsArray: forms_v1.Schema$Option[] = params.options.map((opt) => ({
+          const optionsArray: forms_v1.Schema$Option[] = params.options.map((opt: string) => ({
             value: opt,
           }));
 
@@ -135,7 +89,7 @@ export function buildCreateItemRequest(
           throw new Error("質問グループには少なくとも1つの行（質問）が必要です");
         }
         item.questionGroupItem = {
-          questions: params.rows.map((row) => ({
+          questions: params.rows.map((row: { title: string; required?: boolean }) => ({
             required: row.required ?? false,
             rowQuestion: {
               title: row.title,
@@ -155,7 +109,7 @@ export function buildCreateItemRequest(
             shuffleQuestions: params.shuffleQuestions ?? false,
             columns: {
               type: params.gridType,
-              options: params.columns.map((col) => ({ value: col })),
+              options: params.columns.map((col: string) => ({ value: col })),
             },
           };
         }
