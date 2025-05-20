@@ -12,6 +12,19 @@ import {
   buildUpdateItemRequest,
 } from "../utils/request-builders.js";
 
+type BatchUpdateOperation = {
+  operation: "create_item" | "update_item" | "delete_item" | "move_item" | "update_form_info";
+  index?: number;
+  title?: string;
+  description?: string;
+  item_type?: "text" | "question" | "pageBreak" | "questionGroup";
+  question_type?: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
+  options?: string[];
+  required?: boolean;
+  include_other?: boolean;
+  new_index?: number;
+};
+
 /**
  * フォームの複数の項目を一括更新するMCPツール
  */
@@ -81,18 +94,7 @@ export class BatchUpdateFormTool {
    */
   async execute(args: {
     form_url: string;
-    operations: {
-      operation: "create_item" | "update_item" | "delete_item" | "move_item" | "update_form_info";
-      index?: number;
-      title?: string;
-      description?: string;
-      item_type?: "text" | "question" | "pageBreak" | "questionGroup";
-      question_type?: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
-      options?: string[];
-      required?: boolean;
-      include_other?: boolean;
-      new_index?: number;
-    }[];
+    operations: BatchUpdateOperation[];
   }): Promise<{
     content: TextContent[];
     isError?: boolean;
@@ -112,9 +114,11 @@ export class BatchUpdateFormTool {
 
       // リクエストの準備
       const requests: forms_v1.Schema$Request[] = [];
+      // create_itemは追加順が逆順になるため、ソートしておく。
+      const processedOps = sortBatchOperations(args.operations);
 
       // 各操作をリクエストに変換
-      for (const [opIndex, op] of args.operations.entries()) {
+      for (const [opIndex, op] of processedOps.entries()) {
         try {
           let request: forms_v1.Schema$Request | Error | undefined;
           switch (op.operation) {
@@ -128,7 +132,7 @@ export class BatchUpdateFormTool {
               request = buildCreateItemRequest({
                 title: op.title,
                 description: op.description,
-                index: op.index ?? form.items?.length ?? 0,
+                index: op.index,
                 itemType: op.item_type,
                 questionType: op.question_type,
                 options: op.options,
@@ -222,7 +226,10 @@ export class BatchUpdateFormTool {
 操作内容:
 ${args.operations.map((op, i) => `${i + 1}. ${this.formatOperation(op)}`).join("\n")}
 
-現在のフォームには ${result.form?.items?.length ?? 0} 個の項目があります。`,
+現在のフォームには ${result.form?.items?.length ?? 0} 個の項目があります。
+
+変更後のフォーム情報:
+${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
@@ -244,18 +251,7 @@ ${args.operations.map((op, i) => `${i + 1}. ${this.formatOperation(op)}`).join("
    * @param op 操作オブジェクト
    * @returns フォーマットされた操作の説明
    */
-  private formatOperation(op: {
-    operation: string;
-    index?: number;
-    title?: string;
-    description?: string;
-    item_type?: string;
-    question_type?: string;
-    options?: string[];
-    required?: boolean;
-    include_other?: boolean;
-    new_index?: number;
-  }): string {
+  private formatOperation(op: BatchUpdateOperation): string {
     switch (op.operation) {
       case "create_item":
         return `項目作成: タイプ=${op.item_type}, タイトル="${op.title}"${op.index !== undefined ? `, 位置=${op.index}` : ""}`;
@@ -285,4 +281,17 @@ ${args.operations.map((op, i) => `${i + 1}. ${this.formatOperation(op)}`).join("
         return `不明な操作: ${op.operation}`;
     }
   }
+}
+
+/**
+ * batch update用の操作リストをソートする
+ * create_itemは追加順が逆順になるため、逆順にして先頭に配置する
+ */
+function sortBatchOperations(
+  operations: BatchUpdateOperation[],
+) {
+  const createOps = operations.filter(op => op.operation === 'create_item');
+  const otherOps = operations.filter(op => op.operation !== 'create_item');
+  const reversedCreateOps = [...createOps].reverse();
+  return [...reversedCreateOps, ...otherOps];
 }
