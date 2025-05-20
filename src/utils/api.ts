@@ -63,7 +63,7 @@ export class GFormService {
    * @param formId フォームID
    * @returns フォーム情報
    */
-  async getForm(formId: string): Promise<any> {
+  async getForm(formId: string): Promise<forms_v1.Schema$Form> {
     try {
       const form = await this.formClient.forms.get({
         formId
@@ -74,12 +74,7 @@ export class GFormService {
       }
       const formData = form.data;
 
-      return {
-        formId: formData.formId,
-        info: formData.info,
-        items: formData.items,
-        settings: formData.settings,
-      };
+      return formData;
     } catch (error) {
       console.error("Error fetching form:", error);
       throw new Error(`フォームの取得中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
@@ -546,6 +541,44 @@ export class GFormService {
       return result.data;
     } catch (error) {
       throw new Error(`フォームの作成中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * フォームの項目を更新する
+   * @param formId フォームID
+   * @param index 更新する項目のインデックス
+   * @param item 更新する項目のデータ
+   * @param updateMask 更新対象のフィールドを指定するマスク
+   * @returns 更新結果
+   */
+  async updateItem(
+    formId: string,
+    index: number,
+    item: forms_v1.Schema$Item,
+    updateMask: string
+  ): Promise<any> {
+    try {
+      const result = await this.formClient.forms.batchUpdate({
+        formId,
+        requestBody: {
+          requests: [
+            {
+              updateItem: {
+                location: {
+                  index: index
+                },
+                item: item,
+                updateMask: updateMask
+              }
+            }
+          ],
+          includeFormInResponse: true
+        }
+      });
+      return result.data;
+    } catch (error) {
+      throw new Error(`フォームの項目更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

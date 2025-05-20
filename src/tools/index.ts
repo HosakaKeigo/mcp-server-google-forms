@@ -9,6 +9,7 @@ import { AddQuestionGroupItemTool } from "./add-question-group-item.js";
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { UpdateSettingsTool } from "./update-settings.js";
 import { CreateFormTool } from "./create-form.js";
+import { UpdateItemTool } from "./update-item.js";
 
 /**
  * すべてのツールをサーバーに登録する
@@ -26,6 +27,7 @@ export function registerTools(server: McpServer): void {
     new AddQuestionGroupItemTool(),
     new UpdateSettingsTool(),
     new CreateFormTool(),
+    new UpdateItemTool(),
   ];
 
   for (const tool of tools) {
