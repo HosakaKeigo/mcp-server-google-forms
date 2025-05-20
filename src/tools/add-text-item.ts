@@ -58,7 +58,9 @@ export class AddTextItemTool {
         content: [
           {
             type: "text",
-            text: `テキスト項目 "${args.title}" をフォームに追加しました。`,
+            text: `テキスト項目 "${args.title}" をフォームに追加しました。現在のフォームは下記です。
+
+            ${JSON.stringify(result.form?.items, null, 2)}`,
           },
         ],
       };
