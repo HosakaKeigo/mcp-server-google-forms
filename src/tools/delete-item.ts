@@ -62,7 +62,6 @@ export class DeleteItemTool {
 
       // 項目を削除
       const result = await service.deleteItem(formId, args.index);
-      const currentFormItems = result.form?.items;
 
       return {
         content: [

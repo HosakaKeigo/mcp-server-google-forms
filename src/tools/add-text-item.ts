@@ -27,7 +27,7 @@ export class AddTextItemTool {
     ),
     title: z.string().describe("項目のタイトル"),
     description: z.string().optional().describe("項目の説明（省略可）"),
-    index: z.number().optional().describe("挿入位置（省略時は先頭）"),
+    index: z.number().optional().describe("挿入位置（省略時は末尾）"),
   };
 
   /**
@@ -50,16 +50,6 @@ export class AddTextItemTool {
 
       // サービスのインスタンス化
       const service = new GFormService();
-
-      // テキスト項目を追加
-      // indexの指定がない場合は、最後に追加する
-      if (args.index === undefined) {
-        const form = await service.getForm(formId);
-        if (!form) {
-          throw new Error("フォームが見つかりませんでした。");
-        }
-        args.index = form.items?.length ?? 0;
-      }
       const result = await service.addTextItem(formId, args.title, args.description, args.index);
 
       return {

@@ -41,7 +41,7 @@ export class AddQuestionItemTool {
       .describe(
         "「その他」オプションを含めるかどうか（RADIO, CHECKBOXの場合のみ有効、省略時はfalse）",
       ),
-    index: z.number().optional().describe("挿入位置（省略時は先頭）"),
+    index: z.number().optional().describe("挿入位置（省略時は末尾）"),
   };
 
   /**
@@ -102,14 +102,12 @@ export class AddQuestionItemTool {
         content: [
           {
             type: "text",
-            text: `質問項目 "${args.title}" (${questionTypeMap[args.question_type]}) をフォームに追加しました。${
-              args.required ? "（必須回答）" : ""
-            }${
-              args.include_other &&
-              (args.question_type === "RADIO" || args.question_type === "CHECKBOX")
+            text: `質問項目 "${args.title}" (${questionTypeMap[args.question_type]}) をフォームに追加しました。${args.required ? "（必須回答）" : ""
+              }${args.include_other &&
+                (args.question_type === "RADIO" || args.question_type === "CHECKBOX")
                 ? "（「その他」オプション付き）"
                 : ""
-            }`,
+              }`,
           },
         ],
       };

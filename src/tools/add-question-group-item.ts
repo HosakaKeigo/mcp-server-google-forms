@@ -47,7 +47,7 @@ export class AddQuestionGroupItemTool {
       .optional()
       .describe("質問をランダムに並べ替えるかどうか（省略時はfalse）"),
     description: z.string().optional().describe("質問グループの説明（省略可）"),
-    index: z.number().int().min(0).optional().describe("挿入位置（省略時は先頭）"),
+    index: z.number().int().min(0).optional().describe("挿入位置（省略時は末尾）"),
   };
 
   /**
@@ -102,7 +102,6 @@ export class AddQuestionGroupItemTool {
       }
 
       // 質問グループを追加
-      const index = args.index !== undefined ? args.index : 0;
       const result = await service.addQuestionGroupItem(
         formId,
         args.title,
@@ -112,15 +111,8 @@ export class AddQuestionGroupItemTool {
         args.grid_type,
         args.shuffle_questions,
         args.description,
-        index,
+        args.index
       );
-
-      const indexText =
-        index === 0
-          ? "先頭"
-          : form.items && index >= form.items.length
-            ? "末尾"
-            : `インデックス ${index}`;
 
       const gridText = args.is_grid
         ? `グリッド形式（${args.grid_type === "CHECKBOX" ? "チェックボックス" : "ラジオボタン"}）`
@@ -131,7 +123,7 @@ export class AddQuestionGroupItemTool {
           {
             type: "text",
             text:
-              `フォームに質問グループ「${args.title}」を${indexText}に追加しました。` +
+              `フォームに質問グループ「${args.title}」を追加しました。` +
               `\n- 形式: ${gridText}` +
               `\n- 質問数: ${args.rows.length}個` +
               `\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,

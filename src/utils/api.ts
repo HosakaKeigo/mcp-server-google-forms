@@ -94,7 +94,7 @@ export class GFormService {
    * @param title タイトル
    * @param itemType 項目タイプとそれに関連するデータ
    * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は先頭）
+   * @param index 挿入位置（省略時は末尾）
    * @returns 更新結果
    */
   private async createItem(
@@ -102,7 +102,7 @@ export class GFormService {
     title: string,
     itemType: FormItemType,
     description?: string,
-    index = 0,
+    index?: number,
   ) {
     // 項目タイプに対応する日本語ラベル
     const itemTypeLabels: Record<keyof FormItemData, string> = {
@@ -113,10 +113,16 @@ export class GFormService {
     };
 
     try {
+      // indexが指定されていない場合は、フォームの最後に追加
+      let itemIndex = 0;
+      if (index === undefined) {
+        const form = await this.getForm(formId);
+        itemIndex = form.items ? form.items.length : 0;
+      }
       const createItemParams: CreateItemRequestParams = {
         title,
         description,
-        index,
+        index: itemIndex,
         itemType: itemType.type
       };
 
@@ -170,10 +176,10 @@ export class GFormService {
    * @param formId フォームID
    * @param title タイトル
    * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は先頭）
+   * @param index 挿入位置（省略時は末尾）
    * @returns 更新結果
    */
-  async addTextItem(formId: string, title: string, description?: string, index = 0) {
+  async addTextItem(formId: string, title: string, description?: string, index?: number) {
     return this.createItem(formId, title, { type: "text", data: {} }, description, index);
   }
 
@@ -184,7 +190,7 @@ export class GFormService {
    * @param questionType 質問タイプ
    * @param options 選択肢（選択式の場合）
    * @param required 必須かどうか
-   * @param index 挿入位置（省略時は先頭）
+   * @param index 挿入位置（省略時は末尾）
    * @returns 更新結果
    */
   async addQuestionItem(
@@ -194,7 +200,7 @@ export class GFormService {
     options?: string[],
     required = false,
     includeOther = false,
-    index = 0,
+    index?: number,
   ) {
     return this.createItem(
       formId,
@@ -288,10 +294,10 @@ export class GFormService {
    * @param formId フォームID
    * @param title タイトル
    * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は先頭）
+   * @param index 挿入位置（省略時は末尾）
    * @returns 更新結果
    */
-  async addPageBreakItem(formId: string, title: string, description?: string, index = 0) {
+  async addPageBreakItem(formId: string, title: string, description?: string, index?: number) {
     return this.createItem(formId, title, { type: "pageBreak", data: {} }, description, index);
   }
 
@@ -305,7 +311,7 @@ export class GFormService {
    * @param gridType グリッド形式の場合の選択タイプ（ラジオボタンまたはチェックボックス）
    * @param shuffleQuestions 質問をランダムに並べ替えるかどうか
    * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は先頭）
+   * @param index 挿入位置（省略時は末尾）
    * @returns 更新結果
    */
   async addQuestionGroupItem(
@@ -317,7 +323,7 @@ export class GFormService {
     gridType?: "CHECKBOX" | "RADIO",
     shuffleQuestions?: boolean,
     description?: string,
-    index = 0,
+    index?: number,
   ) {
     if (!rows || rows.length === 0) {
       throw new Error("質問グループには少なくとも1つの行（質問）が必要です");

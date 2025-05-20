@@ -27,7 +27,7 @@ export class AddPageBreakItemTool {
     ),
     title: z.string().describe("ページ区切りのタイトル（新しいページの冒頭に表示されます）"),
     description: z.string().optional().describe("ページ区切りの説明（省略可）"),
-    index: z.number().int().min(0).optional().describe("挿入位置（省略時は先頭）"),
+    index: z.number().int().min(0).optional().describe("挿入位置（省略時は末尾）"),
   };
 
   /**
@@ -65,21 +65,12 @@ export class AddPageBreakItemTool {
       }
 
       // ページ区切りを追加
-      const index = args.index !== undefined ? args.index : 0;
-      const result = await service.addPageBreakItem(formId, args.title, args.description, index);
-
-      const indexText =
-        index === 0
-          ? "先頭"
-          : form.items && index >= form.items.length
-            ? "末尾"
-            : `インデックス ${index}`;
-
+      const result = await service.addPageBreakItem(formId, args.title, args.description, args.index);
       return {
         content: [
           {
             type: "text",
-            text: `フォームに新しいページ区切り「${args.title}」を${indexText}に追加しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
+            text: `フォームに新しいページ区切りを追加しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
