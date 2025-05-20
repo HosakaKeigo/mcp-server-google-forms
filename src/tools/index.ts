@@ -5,6 +5,7 @@ import { MoveItemTool } from "./move-item.js";
 import { UpdateFormInfoTool } from "./update-form-info.js";
 import { DeleteItemTool } from "./delete-item.js";
 import { AddPageBreakItemTool } from "./add-page-break-item.js";
+import { AddQuestionGroupItemTool } from "./add-question-group-item.js";
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 /**
@@ -20,6 +21,7 @@ export function registerTools(server: McpServer): void {
     new UpdateFormInfoTool(),
     new DeleteItemTool(),
     new AddPageBreakItemTool(),
+    new AddQuestionGroupItemTool(),
   ];
 
   for (const tool of tools) {

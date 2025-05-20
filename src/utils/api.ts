@@ -1,6 +1,5 @@
 import { forms, forms_v1 } from "@googleapis/forms"
 import { GoogleAuth } from 'google-auth-library';
-import { GoogleApiError } from '../types/index.js';
 
 /**
  * Formsの質問タイプ
@@ -17,6 +16,13 @@ export type FormItemData = {
     required: boolean;
     questionType: QuestionType;
     options?: string[];
+  };
+  questionGroup: {
+    isGrid: boolean;
+    gridType?: "CHECKBOX" | "RADIO";
+    columns?: string[];
+    shuffleQuestions?: boolean;
+    rows: { title: string; required?: boolean }[];
   };
   // 将来的に新しい項目タイプを追加する場合、ここに定義を追加するだけでよい
   // 例: image: { url: string; width?: number };
@@ -98,7 +104,8 @@ export class GFormService {
     const itemTypeLabels: Record<keyof FormItemData, string> = {
       'text': 'テキスト項目',
       'pageBreak': 'ページ区切り',
-      'question': '質問項目'
+      'question': '質問項目',
+      'questionGroup': '質問グループ'
     };
 
     try {
@@ -151,6 +158,33 @@ export class GFormService {
               type: questionType,
               options: options.map(opt => ({ value: opt }))
             };
+          }
+          break;
+
+        case 'questionGroup':
+          const qgData = itemType.data;
+
+          // 質問グループの設定
+          itemData.questionGroupItem = {
+            questions: qgData.rows.map(row => ({
+              required: row.required ?? false,
+              rowQuestion: {
+                title: row.title
+              }
+            }))
+          };
+
+          // グリッド形式の場合、グリッド設定を追加
+          if (qgData.isGrid && qgData.gridType && qgData.columns && qgData.columns.length > 0) {
+            itemData.questionGroupItem.grid = {
+              shuffleQuestions: qgData.shuffleQuestions ?? false,
+              columns: {
+                type: qgData.gridType,
+                options: qgData.columns.map(col => ({ value: col }))
+              }
+            };
+          } else if (qgData.isGrid) {
+            throw new Error("グリッド形式の質問グループには列オプションとグリッドタイプが必要です");
           }
           break;
       }
@@ -364,6 +398,63 @@ export class GFormService {
       formId,
       title,
       { type: 'pageBreak', data: {} },
+      description,
+      index
+    );
+  }
+
+  /**
+   * フォームに質問グループを追加する
+   * @param formId フォームID
+   * @param title タイトル
+   * @param rows 行（質問）のリスト
+   * @param isGrid グリッド形式かどうか
+   * @param columns グリッド形式の場合の列（選択肢）
+   * @param gridType グリッド形式の場合の選択タイプ（ラジオボタンまたはチェックボックス）
+   * @param shuffleQuestions 質問をランダムに並べ替えるかどうか
+   * @param description 説明（省略可）
+   * @param index 挿入位置（省略時は先頭）
+   * @returns 更新結果
+   */
+  async addQuestionGroupItem(
+    formId: string,
+    title: string,
+    rows: { title: string; required?: boolean }[],
+    isGrid: boolean = false,
+    columns?: string[],
+    gridType?: "CHECKBOX" | "RADIO",
+    shuffleQuestions?: boolean,
+    description?: string,
+    index: number = 0
+  ): Promise<any> {
+    // 行のバリデーション
+    if (!rows || rows.length === 0) {
+      throw new Error("質問グループには少なくとも1つの行（質問）が必要です");
+    }
+
+    // グリッド形式の場合の追加バリデーション
+    if (isGrid) {
+      if (!columns || columns.length === 0) {
+        throw new Error("グリッド形式の質問グループには列（選択肢）が必要です");
+      }
+      if (!gridType) {
+        throw new Error("グリッド形式の質問グループには選択タイプ（CHECKBOX または RADIO）が必要です");
+      }
+    }
+
+    return this.createItem(
+      formId,
+      title,
+      {
+        type: 'questionGroup',
+        data: {
+          isGrid,
+          gridType,
+          columns,
+          shuffleQuestions,
+          rows
+        }
+      },
       description,
       index
     );
