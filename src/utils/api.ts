@@ -473,4 +473,43 @@ export class GFormService {
       index
     );
   }
+
+  /**
+   * フォームの設定を更新する
+   * @param formId フォームID
+   * @param settings 更新する設定
+   * @param updateMask 更新対象のフィールドを指定するマスク
+   * @returns 更新結果
+   */
+  async updateSettings(
+    formId: string,
+    settings: {
+      emailCollectionType?: string;
+      quizSettings?: {
+        isQuiz?: boolean;
+        releaseGrade?: string;
+      };
+    },
+    updateMask: string
+  ): Promise<any> {
+    try {
+      const result = await this.formClient.forms.batchUpdate({
+        formId,
+        requestBody: {
+          requests: [
+            {
+              updateSettings: {
+                settings,
+                updateMask
+              }
+            }
+          ],
+          includeFormInResponse: true
+        }
+      });
+      return result.data;
+    } catch (error) {
+      throw new Error(`フォーム設定の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }

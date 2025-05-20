@@ -7,6 +7,7 @@ import { DeleteItemTool } from "./delete-item.js";
 import { AddPageBreakItemTool } from "./add-page-break-item.js";
 import { AddQuestionGroupItemTool } from "./add-question-group-item.js";
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { UpdateSettingsTool } from "./update-settings.js";
 
 /**
  * すべてのツールをサーバーに登録する
@@ -22,6 +23,7 @@ export function registerTools(server: McpServer): void {
     new DeleteItemTool(),
     new AddPageBreakItemTool(),
     new AddQuestionGroupItemTool(),
+    new UpdateSettingsTool(),
   ];
 
   for (const tool of tools) {
