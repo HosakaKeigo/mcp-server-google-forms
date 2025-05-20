@@ -4,7 +4,7 @@ import { GoogleAuth } from 'google-auth-library';
 /**
  * Formsの質問タイプ
  */
-export type QuestionType = "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROPDOWN";
+export type QuestionType = "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
 
 /**
  * Google Formsの項目データ型
@@ -148,7 +148,7 @@ export class GFormService {
               paragraph: questionType === "PARAGRAPH_TEXT"
             };
           } else {
-            // 選択式の質問（RADIO, CHECKBOX, DROPDOWN）
+            // 選択式の質問（RADIO, CHECKBOX, DROP_DOWN）
             if (!options || options.length === 0) {
               throw new Error("選択式の質問にはオプションが必要です");
             }
@@ -261,7 +261,7 @@ export class GFormService {
   async addQuestionItem(
     formId: string,
     title: string,
-    questionType: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROPDOWN",
+    questionType: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN",
     options?: string[],
     required: boolean = false,
     includeOther: boolean = false,

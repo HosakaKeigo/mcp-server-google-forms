@@ -24,10 +24,10 @@ export class AddQuestionItemTool {
   readonly parameters = {
     form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
     title: z.string().describe("質問のタイトル"),
-    question_type: z.enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROPDOWN"])
-      .describe("質問タイプ（TEXT:短文テキスト, PARAGRAPH_TEXT:長文テキスト, RADIO:ラジオボタン, CHECKBOX:チェックボックス, DROPDOWN:ドロップダウン）"),
+    question_type: z.enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROP_DOWN"])
+      .describe("質問タイプ（TEXT:短文テキスト, PARAGRAPH_TEXT:長文テキスト, RADIO:ラジオボタン, CHECKBOX:チェックボックス, DROP_DOWN:ドロップダウン）"),
     options: z.array(z.string()).optional()
-      .describe("選択肢（RADIO, CHECKBOX, DROPDOWNの場合に必須）"),
+      .describe("選択肢（RADIO, CHECKBOX, DROP_DOWN"),
     required: z.boolean().optional().default(false)
       .describe("必須かどうか（省略時はfalse）"),
     include_other: z.boolean().optional().default(false)
@@ -43,7 +43,7 @@ export class AddQuestionItemTool {
   async execute(args: {
     form_url: string;
     title: string;
-    question_type: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROPDOWN";
+    question_type: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
     options?: string[];
     required?: boolean;
     include_other?: boolean;
@@ -60,7 +60,7 @@ export class AddQuestionItemTool {
       if (
         (args.question_type === "RADIO" ||
           args.question_type === "CHECKBOX" ||
-          args.question_type === "DROPDOWN") &&
+          args.question_type === "DROP_DOWN") &&
         (!args.options || args.options.length === 0)
       ) {
         throw new Error(`${args.question_type}タイプの質問には選択肢が必要です`);
@@ -86,7 +86,7 @@ export class AddQuestionItemTool {
         PARAGRAPH_TEXT: "長文テキスト",
         RADIO: "ラジオボタン",
         CHECKBOX: "チェックボックス",
-        DROPDOWN: "ドロップダウン"
+        DROP_DOWN: "ドロップダウン"
       };
 
       return {
