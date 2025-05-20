@@ -192,4 +192,52 @@ export class GFormService {
       throw new Error(`フォームの項目移動中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
+  /**
+   * フォームの基本情報（タイトルと説明）を更新する
+   * @param formId フォームID
+   * @param title 新しいタイトル（省略可）
+   * @param description 新しい説明（省略可）
+   * @returns 更新結果
+   */
+  async updateFormInfo(formId: string, title?: string, description?: string): Promise<any> {
+    try {
+      // 更新するフィールドとマスクを設定
+      const info: { title?: string; description?: string } = {};
+      const updateMaskParts: string[] = [];
+
+      if (title !== undefined) {
+        info.title = title;
+        updateMaskParts.push('title');
+      }
+
+      if (description !== undefined) {
+        info.description = description;
+        updateMaskParts.push('description');
+      }
+
+      // 更新すべき項目がない場合はエラー
+      if (updateMaskParts.length === 0) {
+        throw new Error('更新すべき項目（タイトルまたは説明）を少なくとも1つ指定してください');
+      }
+
+      const result = await this.formClient.forms.batchUpdate({
+        formId,
+        requestBody: {
+          requests: [
+            {
+              updateFormInfo: {
+                info,
+                updateMask: updateMaskParts.join(',')
+              }
+            }
+          ],
+          includeFormInResponse: true
+        }
+      });
+      return result.data;
+    } catch (error) {
+      throw new Error(`フォーム情報の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
