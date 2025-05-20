@@ -113,7 +113,6 @@ export class UpdateItemTool {
 
       // 項目を更新
       const result = await service.updateItem(formId, args.index, item);
-      const currentItems = result.form?.items;
 
       // 更新内容のメッセージを作成
       let message = `インデックス ${args.index} の項目を更新しました: `;
