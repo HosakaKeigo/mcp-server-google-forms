@@ -8,6 +8,7 @@ import {
   buildUpdateItemRequest,
 } from "./request-builders.js";
 import type { CreateItemRequestParams } from "../types/request-types.js";
+import { ERROR_MESSAGES } from "../constants/errors.js";
 
 /**
  * Formsの質問タイプ
@@ -75,7 +76,7 @@ export class GFormService {
       });
 
       if (!form) {
-        throw new Error("フォームが見つかりません");
+        throw new Error(ERROR_MESSAGES.FORM_NOT_FOUND);
       }
       const formData = form.data;
 
@@ -83,7 +84,7 @@ export class GFormService {
     } catch (error) {
       console.error("Error fetching form:", error);
       throw new Error(
-        `フォームの取得中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `${ERROR_MESSAGES.API_ERROR}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
