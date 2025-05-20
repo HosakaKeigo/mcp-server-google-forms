@@ -8,6 +8,7 @@ import { AddPageBreakItemTool } from "./add-page-break-item.js";
 import { AddQuestionGroupItemTool } from "./add-question-group-item.js";
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { UpdateSettingsTool } from "./update-settings.js";
+import { CreateFormTool } from "./create-form.js";
 
 /**
  * すべてのツールをサーバーに登録する
@@ -24,6 +25,7 @@ export function registerTools(server: McpServer): void {
     new AddPageBreakItemTool(),
     new AddQuestionGroupItemTool(),
     new UpdateSettingsTool(),
+    new CreateFormTool(),
   ];
 
   for (const tool of tools) {

@@ -512,4 +512,40 @@ export class GFormService {
       throw new Error(`フォーム設定の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
+  /**
+   * 新しいフォームを作成する
+   * @param title フォームのタイトル
+   * @param documentTitle ドキュメントのタイトル（省略時はtitleと同じ）
+   * @param unpublished 公開しないかどうか（trueの場合は回答を受け付けない）
+   * @returns フォーム作成結果
+   */
+  async createForm(
+    title: string,
+    documentTitle?: string,
+    unpublished: boolean = false
+  ): Promise<any> {
+    try {
+      // フォームの作成は、titleとdocument_titleのみ指定可能
+      const form: forms_v1.Schema$Form = {
+        info: {
+          title,
+        }
+      };
+
+      // ドキュメントタイトルを設定（省略時はtitleと同じ）
+      if (documentTitle) {
+        form.info!.documentTitle = documentTitle;
+      }
+
+      const result = await this.formClient.forms.create({
+        unpublished,
+        requestBody: form
+      });
+
+      return result.data;
+    } catch (error) {
+      throw new Error(`フォームの作成中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
