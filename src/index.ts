@@ -7,18 +7,18 @@ import { registerTools } from "./tools/index.js";
 import { checkEnvironmentVariables } from "./utils/env.js";
 
 /**
- * MCP サーバーのメイン関数
+ * Main function for the MCP server
  */
 async function main() {
-  // 環境変数の確認
+  // Check environment variables
   const { isValid, missingVars } = checkEnvironmentVariables();
   if (!isValid) {
-    console.error(`環境変数が不足しています: ${missingVars.join(", ")}`);
-    console.error(".env ファイルに必要な環境変数を設定してください");
+    console.error(`Missing environment variables: ${missingVars.join(", ")}`);
+    console.error("Please set the required environment variables in the .env file");
     process.exit(1);
   }
 
-  // MCP サーバーの作成
+  // Create MCP server
   const server = new McpServer({
     name: "google-forms",
     version: "1.0.0",
@@ -29,29 +29,29 @@ async function main() {
     },
   });
 
-  // ツール、プロンプト、リソースの登録
+  // Register tools, prompts, and resources
   registerTools(server);
   //registerPrompts(server);
   //registerResources(server);
 
-  // stdio 通信を設定
+  // Set up stdio communication
   const transport = new StdioServerTransport();
 
-  // サーバー起動のログ
-  console.error("Google Forms MCP サーバーを起動しています...");
+  // Log server startup
+  console.error("Starting Google Forms MCP Server...");
 
   try {
-    // サーバーの接続を確立
+    // Establish server connection
     await server.connect(transport);
-    console.error("MCP サーバーが正常に起動しました");
+    console.error("MCP Server started successfully");
   } catch (error) {
-    console.error("MCP サーバーの起動中にエラーが発生しました:", error);
+    console.error("Error occurred while starting MCP Server:", error);
     process.exit(1);
   }
 }
 
-// アプリケーションの実行
+// Run application
 main().catch((error) => {
-  console.error("予期しないエラーが発生しました:", error);
+  console.error("Unexpected error occurred:", error);
   process.exit(1);
 });
