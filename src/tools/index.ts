@@ -3,6 +3,7 @@ import { AddTextItemTool } from "./add-text-item.js";
 import { AddQuestionItemTool } from "./add-question-item.js";
 import { MoveItemTool } from "./move-item.js";
 import { UpdateFormInfoTool } from "./update-form-info.js";
+import { DeleteItemTool } from "./delete-item.js";
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 /**
@@ -16,6 +17,7 @@ export function registerTools(server: McpServer): void {
     new AddQuestionItemTool(),
     new MoveItemTool(),
     new UpdateFormInfoTool(),
+    new DeleteItemTool(),
   ];
 
   for (const tool of tools) {
