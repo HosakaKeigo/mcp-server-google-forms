@@ -52,6 +52,14 @@ export class AddTextItemTool {
       const service = new GFormService();
 
       // テキスト項目を追加
+      // indexの指定がない場合は、最後に追加する
+      if (args.index === undefined) {
+        const form = await service.getForm(formId);
+        if (!form) {
+          throw new Error("フォームが見つかりませんでした。");
+        }
+        args.index = form.items?.length ?? 0;
+      }
       const result = await service.addTextItem(formId, args.title, args.description, args.index);
 
       return {
