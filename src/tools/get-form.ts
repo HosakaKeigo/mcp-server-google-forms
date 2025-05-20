@@ -1,6 +1,5 @@
 import { TextContent } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
-import { getForm } from "../utils/api.js";
+import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 import { FormUrlSchema } from "../types/index.js";
 
@@ -39,7 +38,8 @@ export class GetFormTool {
       const formId = extractFormId(args.form_url);
 
       // フォーム情報を取得
-      const formData = await getForm(formId);
+      const form = new GFormService();
+      const formData = await form.getForm(formId);
 
       return {
         content: [

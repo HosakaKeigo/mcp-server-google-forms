@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerTools } from "./tools/index.js";
 //import { registerPrompts } from "./prompts/index.js";
 //import { registerResources } from "./resources/index.js";
-import { checkEnvironmentVariables } from "./utils/auth.js";
+import { checkEnvironmentVariables } from "./utils/env.js";
 
 /**
  * MCP サーバーのメイン関数
