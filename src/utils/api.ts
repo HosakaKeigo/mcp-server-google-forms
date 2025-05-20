@@ -128,7 +128,7 @@ export class GFormService {
           itemData.pageBreakItem = {};
           break;
 
-        case "question":
+        case "question": {
           itemData.questionItem = {
             question: {
               required: itemType.data.required,
@@ -171,8 +171,9 @@ export class GFormService {
             };
           }
           break;
+        }
 
-        case "questionGroup":
+        case "questionGroup": {
           const qgData = itemType.data;
 
           // 質問グループの設定
@@ -198,6 +199,7 @@ export class GFormService {
             throw new Error("グリッド形式の質問グループには列オプションとグリッドタイプが必要です");
           }
           break;
+        }
       }
 
       // API呼び出し
@@ -234,7 +236,7 @@ export class GFormService {
    * @param index 挿入位置（省略時は先頭）
    * @returns 更新結果
    */
-  async addTextItem(formId: string, title: string, description?: string, index = 0): Promise<any> {
+  async addTextItem(formId: string, title: string, description?: string, index = 0) {
     return this.createItem(formId, title, { type: "text", data: {} }, description, index);
   }
 
@@ -256,7 +258,7 @@ export class GFormService {
     required = false,
     includeOther = false,
     index = 0,
-  ): Promise<any> {
+  ) {
     return this.createItem(
       formId,
       title,
@@ -316,7 +318,7 @@ export class GFormService {
    * @param description 新しい説明（省略可）
    * @returns 更新結果
    */
-  async updateFormInfo(formId: string, title?: string, description?: string): Promise<any> {
+  async updateFormInfo(formId: string, title?: string, description?: string) {
     try {
       // 更新するフィールドとマスクを設定
       const info: { title?: string; description?: string } = {};
@@ -398,12 +400,7 @@ export class GFormService {
    * @param index 挿入位置（省略時は先頭）
    * @returns 更新結果
    */
-  async addPageBreakItem(
-    formId: string,
-    title: string,
-    description?: string,
-    index = 0,
-  ): Promise<any> {
+  async addPageBreakItem(formId: string, title: string, description?: string, index = 0) {
     return this.createItem(formId, title, { type: "pageBreak", data: {} }, description, index);
   }
 
@@ -430,7 +427,7 @@ export class GFormService {
     shuffleQuestions?: boolean,
     description?: string,
     index = 0,
-  ): Promise<any> {
+  ) {
     // 行のバリデーション
     if (!rows || rows.length === 0) {
       throw new Error("質問グループには少なくとも1つの行（質問）が必要です");
@@ -483,7 +480,7 @@ export class GFormService {
       };
     },
     updateMask: string,
-  ): Promise<any> {
+  ) {
     try {
       const result = await this.formClient.forms.batchUpdate({
         formId,
@@ -514,7 +511,7 @@ export class GFormService {
    * @param unpublished 公開しないかどうか（trueの場合は回答を受け付けない）
    * @returns フォーム作成結果
    */
-  async createForm(title: string, documentTitle?: string, unpublished = false): Promise<any> {
+  async createForm(title: string, documentTitle?: string, unpublished = false) {
     try {
       // フォームの作成は、titleとdocument_titleのみ指定可能
       const form: forms_v1.Schema$Form = {
@@ -525,7 +522,10 @@ export class GFormService {
 
       // ドキュメントタイトルを設定（省略時はtitleと同じ）
       if (documentTitle) {
-        form.info!.documentTitle = documentTitle;
+        if (!form.info) {
+          form.info = {};
+        }
+        form.info.documentTitle = documentTitle;
       }
 
       const result = await this.formClient.forms.create({

@@ -137,9 +137,7 @@ export class UpdateItemTool {
         content: [
           {
             type: "text",
-            text:
-              message +
-              `\n更新後のフォームの項目は以下の通りです：\n\n${JSON.stringify(currentItems, null, 2)}。`,
+            text: `${message}\n更新後のフォームの項目は以下の通りです：\n\n${JSON.stringify(currentItems, null, 2)}。`,
           },
         ],
       };
