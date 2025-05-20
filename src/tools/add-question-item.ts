@@ -30,6 +30,8 @@ export class AddQuestionItemTool {
       .describe("選択肢（RADIO, CHECKBOX, DROPDOWNの場合に必須）"),
     required: z.boolean().optional().default(false)
       .describe("必須かどうか（省略時はfalse）"),
+    include_other: z.boolean().optional().default(false)
+      .describe("「その他」オプションを含めるかどうか（RADIO, CHECKBOXの場合のみ有効、省略時はfalse）"),
     index: z.number().optional().describe("挿入位置（省略時は先頭）"),
   };
 
@@ -44,6 +46,7 @@ export class AddQuestionItemTool {
     question_type: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROPDOWN";
     options?: string[];
     required?: boolean;
+    include_other?: boolean;
     index?: number;
   }): Promise<{
     content: TextContent[];
@@ -67,12 +70,13 @@ export class AddQuestionItemTool {
       const service = new GFormService();
 
       // 質問項目を追加
-      const result = await service.addQuestionItem(
+      await service.addQuestionItem(
         formId,
         args.title,
         args.question_type,
         args.options,
         args.required,
+        args.include_other,
         args.index
       );
 
@@ -89,7 +93,10 @@ export class AddQuestionItemTool {
         content: [
           {
             type: "text",
-            text: `質問項目 "${args.title}" (${questionTypeMap[args.question_type]}) をフォームに追加しました。`,
+            text: `質問項目 "${args.title}" (${questionTypeMap[args.question_type]}) をフォームに追加しました。${args.required ? "（必須回答）" : ""
+              }${args.include_other && (args.question_type === "RADIO" || args.question_type === "CHECKBOX") ?
+                "（「その他」オプション付き）" : ""
+              }`,
           },
         ],
       };

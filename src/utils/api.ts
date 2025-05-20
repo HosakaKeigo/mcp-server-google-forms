@@ -16,6 +16,7 @@ export type FormItemData = {
     required: boolean;
     questionType: QuestionType;
     options?: string[];
+    includeOther?: boolean;
   };
   questionGroup: {
     isGrid: boolean;
@@ -99,7 +100,7 @@ export class GFormService {
     itemType: FormItemType,
     description?: string,
     index: number = 0
-  ): Promise<any> {
+  ) {
     // 項目タイプに対応する日本語ラベル
     const itemTypeLabels: Record<keyof FormItemData, string> = {
       'text': 'テキスト項目',
@@ -154,9 +155,19 @@ export class GFormService {
             if (!itemData.questionItem.question) {
               itemData.questionItem.question = {};
             }
+
+            // 選択肢を準備
+            const mappedOptions: forms_v1.Schema$Option[] = options.map(opt => ({ value: opt }));
+
+            // includeOtherが指定されていて、RADIOまたはCHECKBOXの場合は「その他」オプションを追加
+            if ((questionType === "RADIO" || questionType === "CHECKBOX") &&
+              itemType.data.includeOther === true) {
+              mappedOptions.push({ value: "その他", isOther: true });
+            }
+
             itemData.questionItem.question.choiceQuestion = {
               type: questionType,
-              options: options.map(opt => ({ value: opt }))
+              options: mappedOptions
             };
           }
           break;
@@ -252,6 +263,7 @@ export class GFormService {
     questionType: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROPDOWN",
     options?: string[],
     required: boolean = false,
+    includeOther: boolean = false,
     index: number = 0
   ): Promise<any> {
     return this.createItem(
@@ -262,7 +274,8 @@ export class GFormService {
         data: {
           required,
           questionType,
-          options
+          options,
+          includeOther
         }
       },
       undefined,
