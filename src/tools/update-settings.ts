@@ -33,8 +33,6 @@ export class UpdateSettingsTool {
       .describe("クイズ形式かどうか"),
     release_grade: z.enum(["NONE", "IMMEDIATELY", "LATER"]).optional()
       .describe("成績の公開方法（NONE:公開しない, IMMEDIATELY:即時, LATER:後で）"),
-    collect_email: z.boolean().optional()
-      .describe("メール収集するかどうか（非推奨: 代わりにemail_collection_typeを使用してください）"),
   };
 
   /**
@@ -47,7 +45,6 @@ export class UpdateSettingsTool {
     email_collection_type?: "DO_NOT_COLLECT" | "VERIFIED" | "RESPONDER_INPUT";
     is_quiz?: boolean;
     release_grade?: "NONE" | "IMMEDIATELY" | "LATER";
-    collect_email?: boolean;
   }): Promise<{
     content: TextContent[];
     isError?: boolean;
@@ -73,10 +70,6 @@ export class UpdateSettingsTool {
       // メール収集設定
       if (args.email_collection_type !== undefined) {
         settings.emailCollectionType = args.email_collection_type;
-        updateMaskParts.push('emailCollectionType');
-      } else if (args.collect_email !== undefined) {
-        // 互換性のため、collect_emailもサポート
-        settings.emailCollectionType = args.collect_email ? "RESPONDER_INPUT" : "DO_NOT_COLLECT";
         updateMaskParts.push('emailCollectionType');
       }
 
