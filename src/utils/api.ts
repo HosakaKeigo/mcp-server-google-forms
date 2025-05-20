@@ -162,7 +162,7 @@ export class GFormService {
             // includeOtherが指定されていて、RADIOまたはCHECKBOXの場合は「その他」オプションを追加
             if ((questionType === "RADIO" || questionType === "CHECKBOX") &&
               itemType.data.includeOther === true) {
-              mappedOptions.push({ value: "その他", isOther: true });
+              mappedOptions.push({ isOther: true });
             }
 
             itemData.questionItem.question.choiceQuestion = {
