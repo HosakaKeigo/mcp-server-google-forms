@@ -1,5 +1,13 @@
 import { forms, type forms_v1 } from "@googleapis/forms";
 import { GoogleAuth } from "google-auth-library";
+import {
+  buildCreateItemRequest,
+  buildUpdateItemRequest,
+  buildDeleteItemRequest,
+  buildMoveItemRequest,
+  buildUpdateFormInfoRequest,
+  type CreateItemRequestParams,
+} from "./request-builders.js";
 
 /**
  * Formsの質問タイプ
@@ -45,9 +53,6 @@ export type FormItemType = {
 export class GFormService {
   private formClient: forms_v1.Forms;
 
-  /**
-   * GFormServiceのコンストラクタ
-   */
   constructor() {
     const auth = new GoogleAuth({
       scopes: ["https://www.googleapis.com/auth/forms"],
@@ -108,114 +113,46 @@ export class GFormService {
     };
 
     try {
-      // 基本的な項目データ
-      const itemData: forms_v1.Schema$Item = {
-        title: title,
+      const createItemParams: CreateItemRequestParams = {
+        title,
+        description,
+        index,
+        itemType: itemType.type
       };
 
-      // 説明があれば追加
-      if (description) {
-        itemData.description = description;
-      }
-
-      // 項目タイプに基づいてデータを構築
+      // 項目タイプに基づいてパラメータを追加
       switch (itemType.type) {
-        case "text":
-          itemData.textItem = {};
-          break;
-
-        case "pageBreak":
-          itemData.pageBreakItem = {};
-          break;
-
         case "question": {
-          itemData.questionItem = {
-            question: {
-              required: itemType.data.required,
-            },
-          };
-
-          const { questionType, options } = itemType.data;
-
-          if (questionType === "TEXT" || questionType === "PARAGRAPH_TEXT") {
-            if (!itemData.questionItem.question) {
-              itemData.questionItem.question = {};
-            }
-            itemData.questionItem.question.textQuestion = {
-              paragraph: questionType === "PARAGRAPH_TEXT",
-            };
-          } else {
-            // 選択式の質問（RADIO, CHECKBOX, DROP_DOWN）
-            if (!options || options.length === 0) {
-              throw new Error("選択式の質問にはオプションが必要です");
-            }
-
-            if (!itemData.questionItem.question) {
-              itemData.questionItem.question = {};
-            }
-
-            // 選択肢を準備
-            const mappedOptions: forms_v1.Schema$Option[] = options.map((opt) => ({ value: opt }));
-
-            // includeOtherが指定されていて、RADIOまたはCHECKBOXの場合は「その他」オプションを追加
-            if (
-              (questionType === "RADIO" || questionType === "CHECKBOX") &&
-              itemType.data.includeOther === true
-            ) {
-              mappedOptions.push({ isOther: true });
-            }
-
-            itemData.questionItem.question.choiceQuestion = {
-              type: questionType,
-              options: mappedOptions,
-            };
-          }
+          const { questionType, options, required, includeOther } = itemType.data;
+          createItemParams.questionType = questionType;
+          createItemParams.options = options;
+          createItemParams.required = required;
+          createItemParams.includeOther = includeOther;
           break;
         }
-
         case "questionGroup": {
           const qgData = itemType.data;
-
-          // 質問グループの設定
-          itemData.questionGroupItem = {
-            questions: qgData.rows.map((row) => ({
-              required: row.required ?? false,
-              rowQuestion: {
-                title: row.title,
-              },
-            })),
-          };
-
-          // グリッド形式の場合、グリッド設定を追加
-          if (qgData.isGrid && qgData.gridType && qgData.columns && qgData.columns.length > 0) {
-            itemData.questionGroupItem.grid = {
-              shuffleQuestions: qgData.shuffleQuestions ?? false,
-              columns: {
-                type: qgData.gridType,
-                options: qgData.columns.map((col) => ({ value: col })),
-              },
-            };
-          } else if (qgData.isGrid) {
-            throw new Error("グリッド形式の質問グループには列オプションとグリッドタイプが必要です");
+          createItemParams.rows = qgData.rows;
+          createItemParams.isGrid = qgData.isGrid;
+          if (qgData.isGrid) {
+            createItemParams.columns = qgData.columns;
+            createItemParams.gridType = qgData.gridType;
+            createItemParams.shuffleQuestions = qgData.shuffleQuestions;
           }
           break;
         }
       }
 
-      // API呼び出し
+      const request = buildCreateItemRequest(createItemParams);
+
+      if (request instanceof Error) {
+        throw request;
+      }
+
       const result = await this.formClient.forms.batchUpdate({
         formId,
         requestBody: {
-          requests: [
-            {
-              createItem: {
-                item: itemData,
-                location: {
-                  index: index,
-                },
-              },
-            },
-          ],
+          requests: [request],
           includeFormInResponse: true,
         },
       });
@@ -285,19 +222,13 @@ export class GFormService {
    */
   async moveItem(formId: string, originalIndex: number, newIndex: number) {
     try {
-      const requests = [
-        {
-          moveItem: {
-            originalLocation: {
-              index: originalIndex,
-            },
-            newLocation: {
-              index: newIndex,
-            },
-          },
-        },
-      ];
-      return await this.batchUpdateForm(formId, requests);
+      // buildMoveItemRequestを使用
+      const request = buildMoveItemRequest({
+        index: originalIndex,
+        newIndex: newIndex
+      });
+
+      return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
         `フォームの項目移動中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
@@ -314,32 +245,16 @@ export class GFormService {
    */
   async updateFormInfo(formId: string, title?: string, description?: string) {
     try {
-      const info: { title?: string; description?: string } = {};
-      const updateMaskParts: string[] = [];
+      const request = buildUpdateFormInfoRequest({
+        title,
+        description
+      });
 
-      if (title !== undefined) {
-        info.title = title;
-        updateMaskParts.push("title");
+      if (request instanceof Error) {
+        throw request;
       }
 
-      if (description !== undefined) {
-        info.description = description;
-        updateMaskParts.push("description");
-      }
-
-      if (updateMaskParts.length === 0) {
-        throw new Error("更新すべき項目（タイトルまたは説明）を少なくとも1つ指定してください");
-      }
-
-      const requests = [
-        {
-          updateFormInfo: {
-            info,
-            updateMask: updateMaskParts.join(","),
-          },
-        },
-      ];
-      return await this.batchUpdateForm(formId, requests);
+      return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
         `フォーム情報の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
@@ -355,16 +270,12 @@ export class GFormService {
    */
   async deleteItem(formId: string, index: number) {
     try {
-      const requests = [
-        {
-          deleteItem: {
-            location: {
-              index: index,
-            },
-          },
-        },
-      ];
-      return await this.batchUpdateForm(formId, requests);
+      // buildDeleteItemRequestを使用
+      const request = buildDeleteItemRequest({
+        index: index
+      });
+
+      return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
         `フォームの項目削除中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
@@ -483,7 +394,6 @@ export class GFormService {
    */
   async createForm(title: string, documentTitle?: string, unpublished = false) {
     try {
-      // フォームの作成は、titleとdocument_titleのみ指定可能
       const form: forms_v1.Schema$Form = {
         info: {
           title,
@@ -519,20 +429,26 @@ export class GFormService {
    * @param updateMask 更新対象のフィールドを指定するマスク
    * @returns 更新結果
    */
-  async updateItem(formId: string, index: number, item: forms_v1.Schema$Item, updateMask: string) {
+  async updateItem(formId: string, index: number, item: forms_v1.Schema$Item) {
     try {
-      const requests = [
-        {
-          updateItem: {
-            location: {
-              index: index,
-            },
-            item: item,
-            updateMask: updateMask,
-          },
-        },
-      ];
-      return await this.batchUpdateForm(formId, requests);
+      const form = await this.getForm(formId);
+      if (!form.items || index >= form.items.length) {
+        throw new Error(`インデックス ${index} の項目が見つかりません`);
+      }
+
+      const currentItem = form.items[index];
+      const request = buildUpdateItemRequest({
+        index,
+        title: item.title ?? undefined,
+        description: item.description ?? undefined,
+        required: item.questionItem?.question?.required ?? undefined,
+      }, currentItem);
+
+      if (request instanceof Error) {
+        throw request;
+      }
+
+      return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
         `フォームの項目更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,

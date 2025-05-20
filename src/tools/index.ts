@@ -3,6 +3,7 @@ import { AddPageBreakItemTool } from "./add-page-break-item.js";
 import { AddQuestionGroupItemTool } from "./add-question-group-item.js";
 import { AddQuestionItemTool } from "./add-question-item.js";
 import { AddTextItemTool } from "./add-text-item.js";
+import { BatchUpdateFormTool } from "./batch-update-form.js";
 import { CreateFormTool } from "./create-form.js";
 import { DeleteItemTool } from "./delete-item.js";
 import { GetFormTool } from "./get-form.js";
@@ -28,6 +29,7 @@ export function registerTools(server: McpServer): void {
     new UpdateSettingsTool(),
     new CreateFormTool(),
     new UpdateItemTool(),
+    new BatchUpdateFormTool(),
   ];
 
   for (const tool of tools) {
