@@ -77,7 +77,8 @@ export class GFormService {
       return {
         formId: formData.formId,
         info: formData.info,
-        items: formData.items
+        items: formData.items,
+        settings: formData.settings,
       };
     } catch (error) {
       console.error("Error fetching form:", error);
