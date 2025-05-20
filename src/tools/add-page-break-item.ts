@@ -79,7 +79,7 @@ export class AddPageBreakItemTool {
         content: [
           {
             type: "text",
-            text: `フォームに新しいページ区切り「${args.title}」を${indexText}に追加しました。`,
+            text: `フォームに新しいページ区切り「${args.title}」を${indexText}に追加しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };

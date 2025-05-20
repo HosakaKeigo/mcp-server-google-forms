@@ -68,10 +68,7 @@ export class DeleteItemTool {
         content: [
           {
             type: "text",
-            text: `インデックス ${args.index} の項目「${itemToDelete.title || "無題"}」を削除しました。
-削除後のフォームの項目は以下の通りです：
-
-${JSON.stringify(currentFormItems, null, 2)}。`,
+            text: `インデックス ${args.index} の項目「${itemToDelete.title || "無題"}」を削除しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };

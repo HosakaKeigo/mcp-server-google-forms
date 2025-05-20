@@ -75,7 +75,7 @@ export class UpdateFormInfoTool {
         content: [
           {
             type: "text",
-            text: message,
+            text: `${message}\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };

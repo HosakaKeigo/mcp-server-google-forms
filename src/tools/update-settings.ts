@@ -98,7 +98,7 @@ export class UpdateSettingsTool {
       }
 
       // 設定を更新
-      await service.updateSettings(formId, settings, updateMaskParts.join(","));
+      const result = await service.updateSettings(formId, settings, updateMaskParts.join(","));
 
       // 設定変更内容の説明文を生成
       const changes: string[] = [];
@@ -134,7 +134,7 @@ export class UpdateSettingsTool {
         content: [
           {
             type: "text",
-            text: `フォーム設定を更新しました。\n変更内容: ${changes.join(", ")}`,
+            text: `フォーム設定を更新しました。\n変更内容: ${changes.join(", ")}\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };

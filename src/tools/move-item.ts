@@ -77,7 +77,7 @@ export class MoveItemTool {
         content: [
           {
             type: "text",
-            text: `項目をインデックス ${args.original_index} から ${args.new_index} に移動しました。`,
+            text: `項目をインデックス ${args.original_index} から ${args.new_index} に移動しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };

@@ -103,7 +103,7 @@ export class AddQuestionGroupItemTool {
 
       // 質問グループを追加
       const index = args.index !== undefined ? args.index : 0;
-      await service.addQuestionGroupItem(
+      const result = await service.addQuestionGroupItem(
         formId,
         args.title,
         args.rows,
@@ -133,7 +133,8 @@ export class AddQuestionGroupItemTool {
             text:
               `フォームに質問グループ「${args.title}」を${indexText}に追加しました。` +
               `\n- 形式: ${gridText}` +
-              `\n- 質問数: ${args.rows.length}個`,
+              `\n- 質問数: ${args.rows.length}個` +
+              `\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
