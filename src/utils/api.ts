@@ -285,25 +285,19 @@ export class GFormService {
    */
   async moveItem(formId: string, originalIndex: number, newIndex: number) {
     try {
-      const result = await this.formClient.forms.batchUpdate({
-        formId,
-        requestBody: {
-          requests: [
-            {
-              moveItem: {
-                originalLocation: {
-                  index: originalIndex,
-                },
-                newLocation: {
-                  index: newIndex,
-                },
-              },
+      const requests = [
+        {
+          moveItem: {
+            originalLocation: {
+              index: originalIndex,
             },
-          ],
-          includeFormInResponse: true,
+            newLocation: {
+              index: newIndex,
+            },
+          },
         },
-      });
-      return result.data;
+      ];
+      return await this.batchUpdateForm(formId, requests);
     } catch (error) {
       throw new Error(
         `フォームの項目移動中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
@@ -320,7 +314,6 @@ export class GFormService {
    */
   async updateFormInfo(formId: string, title?: string, description?: string) {
     try {
-      // 更新するフィールドとマスクを設定
       const info: { title?: string; description?: string } = {};
       const updateMaskParts: string[] = [];
 
@@ -334,26 +327,19 @@ export class GFormService {
         updateMaskParts.push("description");
       }
 
-      // 更新すべき項目がない場合はエラー
       if (updateMaskParts.length === 0) {
         throw new Error("更新すべき項目（タイトルまたは説明）を少なくとも1つ指定してください");
       }
 
-      const result = await this.formClient.forms.batchUpdate({
-        formId,
-        requestBody: {
-          requests: [
-            {
-              updateFormInfo: {
-                info,
-                updateMask: updateMaskParts.join(","),
-              },
-            },
-          ],
-          includeFormInResponse: true,
+      const requests = [
+        {
+          updateFormInfo: {
+            info,
+            updateMask: updateMaskParts.join(","),
+          },
         },
-      });
-      return result.data;
+      ];
+      return await this.batchUpdateForm(formId, requests);
     } catch (error) {
       throw new Error(
         `フォーム情報の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
@@ -369,22 +355,16 @@ export class GFormService {
    */
   async deleteItem(formId: string, index: number) {
     try {
-      const result = await this.formClient.forms.batchUpdate({
-        formId,
-        requestBody: {
-          requests: [
-            {
-              deleteItem: {
-                location: {
-                  index: index,
-                },
-              },
+      const requests = [
+        {
+          deleteItem: {
+            location: {
+              index: index,
             },
-          ],
-          includeFormInResponse: true,
+          },
         },
-      });
-      return result.data;
+      ];
+      return await this.batchUpdateForm(formId, requests);
     } catch (error) {
       throw new Error(
         `フォームの項目削除中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
@@ -428,12 +408,9 @@ export class GFormService {
     description?: string,
     index = 0,
   ) {
-    // 行のバリデーション
     if (!rows || rows.length === 0) {
       throw new Error("質問グループには少なくとも1つの行（質問）が必要です");
     }
-
-    // グリッド形式の場合の追加バリデーション
     if (isGrid) {
       if (!columns || columns.length === 0) {
         throw new Error("グリッド形式の質問グループには列（選択肢）が必要です");
@@ -444,7 +421,6 @@ export class GFormService {
         );
       }
     }
-
     return this.createItem(
       formId,
       title,
@@ -482,21 +458,15 @@ export class GFormService {
     updateMask: string,
   ) {
     try {
-      const result = await this.formClient.forms.batchUpdate({
-        formId,
-        requestBody: {
-          requests: [
-            {
-              updateSettings: {
-                settings,
-                updateMask,
-              },
-            },
-          ],
-          includeFormInResponse: true,
+      const requests = [
+        {
+          updateSettings: {
+            settings,
+            updateMask,
+          },
         },
-      });
-      return result.data;
+      ];
+      return await this.batchUpdateForm(formId, requests);
     } catch (error) {
       throw new Error(
         `フォーム設定の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
@@ -551,27 +521,49 @@ export class GFormService {
    */
   async updateItem(formId: string, index: number, item: forms_v1.Schema$Item, updateMask: string) {
     try {
+      const requests = [
+        {
+          updateItem: {
+            location: {
+              index: index,
+            },
+            item: item,
+            updateMask: updateMask,
+          },
+        },
+      ];
+      return await this.batchUpdateForm(formId, requests);
+    } catch (error) {
+      throw new Error(
+        `フォームの項目更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * フォームに対して複数の操作を一括で行う
+   * @param formId フォームID
+   * @param requests 実行するリクエスト配列
+   * @returns 更新結果
+   */
+  async batchUpdateForm(formId: string, requests: forms_v1.Schema$Request[]) {
+    try {
+      // リクエストが空の場合はエラー
+      if (requests.length === 0) {
+        throw new Error("実行するリクエストがありません");
+      }
+
       const result = await this.formClient.forms.batchUpdate({
         formId,
         requestBody: {
-          requests: [
-            {
-              updateItem: {
-                location: {
-                  index: index,
-                },
-                item: item,
-                updateMask: updateMask,
-              },
-            },
-          ],
+          requests: requests,
           includeFormInResponse: true,
         },
       });
       return result.data;
     } catch (error) {
       throw new Error(
-        `フォームの項目更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `フォームの更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
