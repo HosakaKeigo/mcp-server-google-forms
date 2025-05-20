@@ -1,7 +1,13 @@
 import type { forms_v1 } from "@googleapis/forms";
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { FormUrlSchema } from "../types/index.js";
+import {
+  type BatchUpdateOperation,
+  FormUrlSchema,
+  ItemTypeSchema,
+  OperationTypeSchema,
+  QuestionTypeSchema
+} from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 import {
@@ -11,19 +17,6 @@ import {
   buildUpdateFormInfoRequest,
   buildUpdateItemRequest,
 } from "../utils/request-builders.js";
-
-type BatchUpdateOperation = {
-  operation: "create_item" | "update_item" | "delete_item" | "move_item" | "update_form_info";
-  index?: number;
-  title?: string;
-  description?: string;
-  item_type?: "text" | "question" | "pageBreak" | "questionGroup";
-  question_type?: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
-  options?: string[];
-  required?: boolean;
-  include_other?: boolean;
-  new_index?: number;
-};
 
 /**
  * フォームの複数の項目を一括更新するMCPツール
@@ -51,9 +44,7 @@ export class BatchUpdateFormTool {
       .array(
         z.object({
           // 操作タイプ
-          operation: z
-            .enum(["create_item", "update_item", "delete_item", "move_item", "update_form_info"])
-            .describe("実行する操作のタイプ"),
+          operation: OperationTypeSchema,
 
           // 共通パラメータ
           index: z.number().optional().describe("操作対象の項目インデックス（必要な場合）"),
@@ -63,16 +54,10 @@ export class BatchUpdateFormTool {
           description: z.string().optional().describe("項目の説明"),
 
           // 項目タイプ情報（create_item用）
-          item_type: z
-            .enum(["text", "question", "pageBreak", "questionGroup"])
-            .optional()
-            .describe("作成する項目のタイプ（create_item時に必要）"),
+          item_type: ItemTypeSchema.optional(),
 
           // 質問タイプ情報（質問作成時）
-          question_type: z
-            .enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROP_DOWN"])
-            .optional()
-            .describe("質問のタイプ（item_typeがquestionの場合）"),
+          question_type: QuestionTypeSchema.optional(),
           options: z.array(z.string()).optional().describe("選択肢のリスト（選択式質問の場合）"),
           required: z.boolean().optional().describe("質問が必須かどうか"),
           include_other: z
