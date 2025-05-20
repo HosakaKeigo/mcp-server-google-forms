@@ -3,6 +3,36 @@ import { GoogleAuth } from 'google-auth-library';
 import { GoogleApiError } from '../types/index.js';
 
 /**
+ * Formsの質問タイプ
+ */
+export type QuestionType = "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROPDOWN";
+
+/**
+ * Google Formsの項目データ型
+ */
+export type FormItemData = {
+  text: Record<string, never>;
+  pageBreak: Record<string, never>;
+  question: {
+    required: boolean;
+    questionType: QuestionType;
+    options?: string[];
+  };
+  // 将来的に新しい項目タイプを追加する場合、ここに定義を追加するだけでよい
+  // 例: image: { url: string; width?: number };
+};
+
+/**
+ * Google Formsの項目タイプを表す型
+ */
+export type FormItemType = {
+  [K in keyof FormItemData]: {
+    type: K;
+    data: FormItemData[K];
+  }
+}[keyof FormItemData];
+
+/**
  * Google Forms APIを操作するためのサービスクラス
  */
 export class GFormService {
@@ -49,28 +79,83 @@ export class GFormService {
   }
 
   /**
-   * フォームにテキスト項目を追加する
+   * 共通の項目作成メソッド（型安全）
    * @param formId フォームID
    * @param title タイトル
+   * @param itemType 項目タイプとそれに関連するデータ
    * @param description 説明（省略可）
    * @param index 挿入位置（省略時は先頭）
    * @returns 更新結果
    */
-  async addTextItem(formId: string, title: string, description?: string, index: number = 0): Promise<any> {
+  private async createItem(
+    formId: string,
+    title: string,
+    itemType: FormItemType,
+    description?: string,
+    index: number = 0
+  ): Promise<any> {
+    // 項目タイプに対応する日本語ラベル
+    const itemTypeLabels: Record<keyof FormItemData, string> = {
+      'text': 'テキスト項目',
+      'pageBreak': 'ページ区切り',
+      'question': '質問項目'
+    };
+
     try {
-      const itemData: {
-        title: string;
-        description?: string;
-        textItem: Record<string, never>;
-      } = {
-        title: title,
-        textItem: {}
+      // 基本的な項目データ
+      const itemData: forms_v1.Schema$Item = {
+        title: title
       };
 
+      // 説明があれば追加
       if (description) {
         itemData.description = description;
       }
 
+      // 項目タイプに基づいてデータを構築
+      switch (itemType.type) {
+        case 'text':
+          itemData.textItem = {};
+          break;
+
+        case 'pageBreak':
+          itemData.pageBreakItem = {};
+          break;
+
+        case 'question':
+          itemData.questionItem = {
+            question: {
+              required: itemType.data.required
+            }
+          };
+
+          const { questionType, options } = itemType.data;
+
+          if (questionType === "TEXT" || questionType === "PARAGRAPH_TEXT") {
+            if (!itemData.questionItem.question) {
+              itemData.questionItem.question = {};
+            }
+            itemData.questionItem.question.textQuestion = {
+              paragraph: questionType === "PARAGRAPH_TEXT"
+            };
+          } else {
+            // 選択式の質問（RADIO, CHECKBOX, DROPDOWN）
+            if (!options || options.length === 0) {
+              throw new Error("選択式の質問にはオプションが必要です");
+            }
+
+            if (!itemData.questionItem.question) {
+              itemData.questionItem.question = {};
+            }
+            itemData.questionItem.question.choiceQuestion = {
+              type: questionType,
+              options: options.map(opt => ({ value: opt }))
+            };
+          }
+          break;
+      }
+
+      // API呼び出し
       const result = await this.formClient.forms.batchUpdate({
         formId,
         requestBody: {
@@ -89,8 +174,32 @@ export class GFormService {
       });
       return result.data;
     } catch (error) {
-      throw new Error(`フォームへのテキスト項目追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+      const typeName = itemTypeLabels[itemType.type as keyof FormItemData] || '項目';
+      throw new Error(`フォームへの${typeName}追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  /**
+   * フォームにテキスト項目を追加する
+   * @param formId フォームID
+   * @param title タイトル
+   * @param description 説明（省略可）
+   * @param index 挿入位置（省略時は先頭）
+   * @returns 更新結果
+   */
+  async addTextItem(
+    formId: string,
+    title: string,
+    description?: string,
+    index: number = 0
+  ): Promise<any> {
+    return this.createItem(
+      formId,
+      title,
+      { type: 'text', data: {} },
+      description,
+      index
+    );
   }
 
   /**
@@ -111,53 +220,20 @@ export class GFormService {
     required: boolean = false,
     index: number = 0
   ): Promise<any> {
-    try {
-      const itemData: any = {
-        title: title,
-        questionItem: {
-          question: {
-            required: required
-          }
+    return this.createItem(
+      formId,
+      title,
+      {
+        type: 'question',
+        data: {
+          required,
+          questionType,
+          options
         }
-      };
-
-      // 質問タイプに応じた設定
-      if (questionType === "TEXT" || questionType === "PARAGRAPH_TEXT") {
-        itemData.questionItem.question.textQuestion = {
-          paragraph: questionType === "PARAGRAPH_TEXT"
-        };
-      } else {
-        // 選択式の質問（RADIO, CHECKBOX, DROPDOWN）
-        if (!options || options.length === 0) {
-          throw new Error("選択式の質問にはオプションが必要です");
-        }
-
-        itemData.questionItem.question.choiceQuestion = {
-          type: questionType,
-          options: options.map(opt => ({ value: opt }))
-        };
-      }
-
-      const result = await this.formClient.forms.batchUpdate({
-        formId,
-        requestBody: {
-          requests: [
-            {
-              createItem: {
-                item: itemData,
-                location: {
-                  index: index
-                }
-              }
-            }
-          ],
-          includeFormInResponse: true
-        }
-      });
-      return result.data;
-    } catch (error) {
-      throw new Error(`フォームへの質問項目追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
-    }
+      },
+      undefined,
+      index
+    );
   }
 
   /**
@@ -278,40 +354,18 @@ export class GFormService {
    * @param index 挿入位置（省略時は先頭）
    * @returns 更新結果
    */
-  async addPageBreakItem(formId: string, title: string, description?: string, index: number = 0): Promise<any> {
-    try {
-      const itemData: {
-        title: string;
-        description?: string;
-        pageBreakItem: Record<string, never>;
-      } = {
-        title: title,
-        pageBreakItem: {}
-      };
-
-      if (description) {
-        itemData.description = description;
-      }
-
-      const result = await this.formClient.forms.batchUpdate({
-        formId,
-        requestBody: {
-          requests: [
-            {
-              createItem: {
-                item: itemData,
-                location: {
-                  index: index
-                }
-              }
-            }
-          ],
-          includeFormInResponse: true
-        }
-      });
-      return result.data;
-    } catch (error) {
-      throw new Error(`フォームへのページ区切り追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  async addPageBreakItem(
+    formId: string,
+    title: string,
+    description?: string,
+    index: number = 0
+  ): Promise<any> {
+    return this.createItem(
+      formId,
+      title,
+      { type: 'pageBreak', data: {} },
+      description,
+      index
+    );
   }
 }
