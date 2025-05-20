@@ -1,7 +1,7 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォームを取得するMCPツール
@@ -15,13 +15,16 @@ export class GetFormTool {
   /**
    * ツールの説明
    */
-  readonly description = "Google Formsの構造を取得します。編集するための準備として利用してください。";
+  readonly description =
+    "Google Formsの構造を取得します。編集するための準備として利用してください。";
 
   /**
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
   };
 
   /**

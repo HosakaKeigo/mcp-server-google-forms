@@ -1,8 +1,8 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォームに質問項目を追加するMCPツール
@@ -16,22 +16,31 @@ export class AddQuestionItemTool {
   /**
    * ツールの説明
    */
-  readonly description = "Google Formsに質問項目を追加します。テキスト型や選択式の質問を作成できます。";
+  readonly description =
+    "Google Formsに質問項目を追加します。テキスト型や選択式の質問を作成できます。";
 
   /**
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
     title: z.string().describe("質問のタイトル"),
-    question_type: z.enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROP_DOWN"])
-      .describe("質問タイプ（TEXT:短文テキスト, PARAGRAPH_TEXT:長文テキスト, RADIO:ラジオボタン, CHECKBOX:チェックボックス, DROP_DOWN:ドロップダウン）"),
-    options: z.array(z.string()).optional()
-      .describe("選択肢（RADIO, CHECKBOX, DROP_DOWN"),
-    required: z.boolean().optional().default(false)
-      .describe("必須かどうか（省略時はfalse）"),
-    include_other: z.boolean().optional().default(false)
-      .describe("「その他」オプションを含めるかどうか（RADIO, CHECKBOXの場合のみ有効、省略時はfalse）"),
+    question_type: z
+      .enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROP_DOWN"])
+      .describe(
+        "質問タイプ（TEXT:短文テキスト, PARAGRAPH_TEXT:長文テキスト, RADIO:ラジオボタン, CHECKBOX:チェックボックス, DROP_DOWN:ドロップダウン）",
+      ),
+    options: z.array(z.string()).optional().describe("選択肢（RADIO, CHECKBOX, DROP_DOWN"),
+    required: z.boolean().optional().default(false).describe("必須かどうか（省略時はfalse）"),
+    include_other: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        "「その他」オプションを含めるかどうか（RADIO, CHECKBOXの場合のみ有効、省略時はfalse）",
+      ),
     index: z.number().optional().describe("挿入位置（省略時は先頭）"),
   };
 
@@ -77,7 +86,7 @@ export class AddQuestionItemTool {
         args.options,
         args.required,
         args.include_other,
-        args.index
+        args.index,
       );
 
       // 質問タイプを日本語に変換
@@ -86,17 +95,21 @@ export class AddQuestionItemTool {
         PARAGRAPH_TEXT: "長文テキスト",
         RADIO: "ラジオボタン",
         CHECKBOX: "チェックボックス",
-        DROP_DOWN: "ドロップダウン"
+        DROP_DOWN: "ドロップダウン",
       };
 
       return {
         content: [
           {
             type: "text",
-            text: `質問項目 "${args.title}" (${questionTypeMap[args.question_type]}) をフォームに追加しました。${args.required ? "（必須回答）" : ""
-              }${args.include_other && (args.question_type === "RADIO" || args.question_type === "CHECKBOX") ?
-                "（「その他」オプション付き）" : ""
-              }`,
+            text: `質問項目 "${args.title}" (${questionTypeMap[args.question_type]}) をフォームに追加しました。${
+              args.required ? "（必須回答）" : ""
+            }${
+              args.include_other &&
+              (args.question_type === "RADIO" || args.question_type === "CHECKBOX")
+                ? "（「その他」オプション付き）"
+                : ""
+            }`,
           },
         ],
       };

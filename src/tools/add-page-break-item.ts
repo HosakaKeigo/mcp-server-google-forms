@@ -1,8 +1,8 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォームにページ区切りを追加するMCPツール
@@ -22,7 +22,9 @@ export class AddPageBreakItemTool {
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
     title: z.string().describe("ページ区切りのタイトル（新しいページの冒頭に表示されます）"),
     description: z.string().optional().describe("ページ区切りの説明（省略可）"),
     index: z.number().int().min(0).optional().describe("挿入位置（省略時は先頭）"),
@@ -56,24 +58,22 @@ export class AddPageBreakItemTool {
       if (args.index !== undefined) {
         const maxIndex = form.items ? form.items.length : 0;
         if (args.index < 0 || args.index > maxIndex) {
-          throw new Error(`インデックス ${args.index} が範囲外です。フォームには ${maxIndex} 個の項目があります。有効な範囲は 0～${maxIndex} です。`);
+          throw new Error(
+            `インデックス ${args.index} が範囲外です。フォームには ${maxIndex} 個の項目があります。有効な範囲は 0～${maxIndex} です。`,
+          );
         }
       }
 
       // ページ区切りを追加
       const index = args.index !== undefined ? args.index : 0;
-      const result = await service.addPageBreakItem(
-        formId,
-        args.title,
-        args.description,
-        index
-      );
+      const result = await service.addPageBreakItem(formId, args.title, args.description, index);
 
-      const indexText = index === 0
-        ? "先頭"
-        : form.items && index >= form.items.length
-          ? "末尾"
-          : `インデックス ${index}`;
+      const indexText =
+        index === 0
+          ? "先頭"
+          : form.items && index >= form.items.length
+            ? "末尾"
+            : `インデックス ${index}`;
 
       return {
         content: [

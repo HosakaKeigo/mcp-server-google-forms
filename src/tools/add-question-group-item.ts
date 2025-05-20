@@ -1,8 +1,8 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォームに質問グループ（グリッド）を追加するMCPツール
@@ -16,24 +16,38 @@ export class AddQuestionGroupItemTool {
   /**
    * ツールの説明
    */
-  readonly description = "Google Formsに質問グループ（複数の質問を一つのセクションにまとめたもの、グリッド形式も対応）を追加します。";
+  readonly description =
+    "Google Formsに質問グループ（複数の質問を一つのセクションにまとめたもの、グリッド形式も対応）を追加します。";
 
   /**
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
     title: z.string().describe("質問グループのタイトル"),
-    rows: z.array(z.object({
-      title: z.string().describe("質問（行）のタイトル"),
-      required: z.boolean().optional().describe("必須かどうか（省略時はfalse）")
-    })).min(1).describe("質問（行）のリスト"),
+    rows: z
+      .array(
+        z.object({
+          title: z.string().describe("質問（行）のタイトル"),
+          required: z.boolean().optional().describe("必須かどうか（省略時はfalse）"),
+        }),
+      )
+      .min(1)
+      .describe("質問（行）のリスト"),
     is_grid: z.boolean().default(false).describe("グリッド形式かどうか（省略時はfalse）"),
-    grid_type: z.enum(["CHECKBOX", "RADIO"]).optional().describe("グリッド形式の場合の選択タイプ（チェックボックスまたはラジオボタン）"),
+    grid_type: z
+      .enum(["CHECKBOX", "RADIO"])
+      .optional()
+      .describe("グリッド形式の場合の選択タイプ（チェックボックスまたはラジオボタン）"),
     columns: z.array(z.string()).optional().describe("グリッド形式の場合の列（選択肢）"),
-    shuffle_questions: z.boolean().optional().describe("質問をランダムに並べ替えるかどうか（省略時はfalse）"),
+    shuffle_questions: z
+      .boolean()
+      .optional()
+      .describe("質問をランダムに並べ替えるかどうか（省略時はfalse）"),
     description: z.string().optional().describe("質問グループの説明（省略可）"),
-    index: z.number().int().min(0).optional().describe("挿入位置（省略時は先頭）")
+    index: z.number().int().min(0).optional().describe("挿入位置（省略時は先頭）"),
   };
 
   /**
@@ -69,7 +83,9 @@ export class AddQuestionGroupItemTool {
       if (args.index !== undefined) {
         const maxIndex = form.items ? form.items.length : 0;
         if (args.index < 0 || args.index > maxIndex) {
-          throw new Error(`インデックス ${args.index} が範囲外です。フォームには ${maxIndex} 個の項目があります。有効な範囲は 0～${maxIndex} です。`);
+          throw new Error(
+            `インデックス ${args.index} が範囲外です。フォームには ${maxIndex} 個の項目があります。有効な範囲は 0～${maxIndex} です。`,
+          );
         }
       }
 
@@ -79,7 +95,9 @@ export class AddQuestionGroupItemTool {
           throw new Error("グリッド形式の質問グループには列（選択肢）が必要です");
         }
         if (!args.grid_type) {
-          throw new Error("グリッド形式の質問グループには選択タイプ（CHECKBOX または RADIO）が必要です");
+          throw new Error(
+            "グリッド形式の質問グループには選択タイプ（CHECKBOX または RADIO）が必要です",
+          );
         }
       }
 
@@ -94,14 +112,15 @@ export class AddQuestionGroupItemTool {
         args.grid_type,
         args.shuffle_questions,
         args.description,
-        index
+        index,
       );
 
-      const indexText = index === 0
-        ? "先頭"
-        : form.items && index >= form.items.length
-          ? "末尾"
-          : `インデックス ${index}`;
+      const indexText =
+        index === 0
+          ? "先頭"
+          : form.items && index >= form.items.length
+            ? "末尾"
+            : `インデックス ${index}`;
 
       const gridText = args.is_grid
         ? `グリッド形式（${args.grid_type === "CHECKBOX" ? "チェックボックス" : "ラジオボタン"}）`
@@ -111,9 +130,10 @@ export class AddQuestionGroupItemTool {
         content: [
           {
             type: "text",
-            text: `フォームに質問グループ「${args.title}」を${indexText}に追加しました。` +
+            text:
+              `フォームに質問グループ「${args.title}」を${indexText}に追加しました。` +
               `\n- 形式: ${gridText}` +
-              `\n- 質問数: ${args.rows.length}個`
+              `\n- 質問数: ${args.rows.length}個`,
           },
         ],
       };

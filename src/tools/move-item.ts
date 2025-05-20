@@ -1,8 +1,8 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォームの項目を移動するMCPツール
@@ -22,8 +22,14 @@ export class MoveItemTool {
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
-    original_index: z.number().int().min(0).describe("移動する項目の現在のインデックス（0から始まる）"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
+    original_index: z
+      .number()
+      .int()
+      .min(0)
+      .describe("移動する項目の現在のインデックス（0から始まる）"),
     new_index: z.number().int().min(0).describe("移動先のインデックス（0から始まる）"),
   };
 
@@ -65,11 +71,7 @@ export class MoveItemTool {
       const service = new GFormService();
 
       // 項目を移動
-      const result = await service.moveItem(
-        formId,
-        args.original_index,
-        args.new_index
-      );
+      const result = await service.moveItem(formId, args.original_index, args.new_index);
 
       return {
         content: [

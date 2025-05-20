@@ -1,8 +1,8 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォームにテキスト項目を追加するMCPツール
@@ -22,7 +22,9 @@ export class AddTextItemTool {
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
     title: z.string().describe("項目のタイトル"),
     description: z.string().optional().describe("項目の説明（省略可）"),
     index: z.number().optional().describe("挿入位置（省略時は先頭）"),
@@ -50,12 +52,7 @@ export class AddTextItemTool {
       const service = new GFormService();
 
       // テキスト項目を追加
-      const result = await service.addTextItem(
-        formId,
-        args.title,
-        args.description,
-        args.index
-      );
+      const result = await service.addTextItem(formId, args.title, args.description, args.index);
 
       return {
         content: [

@@ -1,8 +1,8 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォーム情報を更新するMCPツール
@@ -22,7 +22,9 @@ export class UpdateFormInfoTool {
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
     title: z.string().optional().describe("フォームの新しいタイトル（省略可）"),
     description: z.string().optional().describe("フォームの新しい説明（省略可）"),
   };
@@ -43,7 +45,7 @@ export class UpdateFormInfoTool {
     try {
       // 少なくとも1つのパラメータがあるか確認
       if (args.title === undefined && args.description === undefined) {
-        throw new Error('更新すべき項目（タイトルまたは説明）を少なくとも1つ指定してください');
+        throw new Error("更新すべき項目（タイトルまたは説明）を少なくとも1つ指定してください");
       }
 
       // フォームIDを抽出
@@ -53,11 +55,7 @@ export class UpdateFormInfoTool {
       const service = new GFormService();
 
       // フォーム情報を更新
-      const result = await service.updateFormInfo(
-        formId,
-        args.title,
-        args.description
-      );
+      const result = await service.updateFormInfo(formId, args.title, args.description);
 
       // 更新内容のメッセージを作成
       let message = "フォーム情報を更新しました: ";
@@ -71,7 +69,7 @@ export class UpdateFormInfoTool {
         updates.push(`説明「${args.description}」`);
       }
 
-      message += updates.join('、');
+      message += updates.join("、");
 
       return {
         content: [

@@ -1,8 +1,8 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FormUrlSchema } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
-import { FormUrlSchema } from "../types/index.js";
 
 /**
  * フォームの項目を削除するMCPツール
@@ -22,7 +22,9 @@ export class DeleteItemTool {
    * ツールのパラメータ定義
    */
   readonly parameters = {
-    form_url: FormUrlSchema.describe("Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)"),
+    form_url: FormUrlSchema.describe(
+      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+    ),
     index: z.number().int().min(0).describe("削除する項目のインデックス（0から始まる）"),
   };
 
@@ -50,7 +52,9 @@ export class DeleteItemTool {
 
       // インデックスの範囲確認
       if (args.index < 0 || !form.items || args.index >= form.items.length) {
-        throw new Error(`インデックス ${args.index} が範囲外です。フォームには ${form.items ? form.items.length : 0} 個の項目があります。`);
+        throw new Error(
+          `インデックス ${args.index} が範囲外です。フォームには ${form.items ? form.items.length : 0} 個の項目があります。`,
+        );
       }
 
       // 削除する項目の情報を取得

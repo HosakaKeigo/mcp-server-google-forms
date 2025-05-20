@@ -1,15 +1,15 @@
-import { GetFormTool } from "./get-form.js";
-import { AddTextItemTool } from "./add-text-item.js";
-import { AddQuestionItemTool } from "./add-question-item.js";
-import { MoveItemTool } from "./move-item.js";
-import { UpdateFormInfoTool } from "./update-form-info.js";
-import { DeleteItemTool } from "./delete-item.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { AddPageBreakItemTool } from "./add-page-break-item.js";
 import { AddQuestionGroupItemTool } from "./add-question-group-item.js";
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { UpdateSettingsTool } from "./update-settings.js";
+import { AddQuestionItemTool } from "./add-question-item.js";
+import { AddTextItemTool } from "./add-text-item.js";
 import { CreateFormTool } from "./create-form.js";
+import { DeleteItemTool } from "./delete-item.js";
+import { GetFormTool } from "./get-form.js";
+import { MoveItemTool } from "./move-item.js";
+import { UpdateFormInfoTool } from "./update-form-info.js";
 import { UpdateItemTool } from "./update-item.js";
+import { UpdateSettingsTool } from "./update-settings.js";
 
 /**
  * すべてのツールをサーバーに登録する
@@ -31,11 +31,6 @@ export function registerTools(server: McpServer): void {
   ];
 
   for (const tool of tools) {
-    server.tool(
-      tool.name,
-      tool.description,
-      tool.parameters,
-      tool.execute.bind(tool)
-    );
+    server.tool(tool.name, tool.description, tool.parameters, tool.execute.bind(tool));
   }
 }

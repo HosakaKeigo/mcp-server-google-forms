@@ -1,4 +1,4 @@
-import { TextContent } from "@modelcontextprotocol/sdk/types.js";
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { GFormService } from "../utils/api.js";
 
@@ -21,8 +21,15 @@ export class CreateFormTool {
    */
   readonly parameters = {
     title: z.string().describe("フォームのタイトル"),
-    document_title: z.string().optional().describe("ドキュメントのタイトル（省略時はフォームのタイトルと同じ）"),
-    unpublished: z.boolean().optional().default(false).describe("公開しないかどうか（trueの場合は回答を受け付けない、デフォルトはfalse）"),
+    document_title: z
+      .string()
+      .optional()
+      .describe("ドキュメントのタイトル（省略時はフォームのタイトルと同じ）"),
+    unpublished: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe("公開しないかどうか（trueの場合は回答を受け付けない、デフォルトはfalse）"),
   };
 
   /**
@@ -43,11 +50,7 @@ export class CreateFormTool {
       const service = new GFormService();
 
       // フォームを作成
-      const result = await service.createForm(
-        args.title,
-        args.document_title,
-        args.unpublished
-      );
+      const result = await service.createForm(args.title, args.document_title, args.unpublished);
 
       // フォームURLの作成
       let formUrl = "";
@@ -59,19 +62,19 @@ export class CreateFormTool {
         content: [
           {
             type: "text",
-            text: `フォームを作成しました。\nタイトル: ${args.title}\nフォームID: ${result.formId}\nURL: ${formUrl}`
-          }
-        ]
+            text: `フォームを作成しました。\nタイトル: ${args.title}\nフォームID: ${result.formId}\nURL: ${formUrl}`,
+          },
+        ],
       };
     } catch (error) {
       return {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`
-          }
+            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+          },
         ],
-        isError: true
+        isError: true,
       };
     }
   }

@@ -8,7 +8,7 @@ import { URL } from "url";
 export function extractFormId(formUrl: string): string {
   try {
     const url = new URL(formUrl);
-    
+
     // 編集URLの形式: https://docs.google.com/forms/d/e/{formId}/edit
     if (url.pathname.includes("/forms/d/e/")) {
       const pathParts = url.pathname.split("/");
@@ -17,7 +17,7 @@ export function extractFormId(formUrl: string): string {
         return pathParts[formIdIndex];
       }
     }
-    
+
     // 通常のURL形式: https://docs.google.com/forms/d/{formId}/edit
     if (url.pathname.includes("/forms/d/")) {
       const pathParts = url.pathname.split("/");
@@ -26,9 +26,11 @@ export function extractFormId(formUrl: string): string {
         return pathParts[formIdIndex];
       }
     }
-    
+
     throw new Error("フォームIDが見つかりませんでした");
   } catch (error) {
-    throw new Error(`フォームURLの解析中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `フォームURLの解析中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
