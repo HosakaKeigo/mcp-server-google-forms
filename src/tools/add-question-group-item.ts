@@ -111,7 +111,7 @@ export class AddQuestionGroupItemTool {
         args.grid_type,
         args.shuffle_questions,
         args.description,
-        args.index
+        args.index,
       );
 
       const gridText = args.is_grid

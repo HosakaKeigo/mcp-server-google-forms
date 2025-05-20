@@ -65,7 +65,12 @@ export class AddPageBreakItemTool {
       }
 
       // ページ区切りを追加
-      const result = await service.addPageBreakItem(formId, args.title, args.description, args.index);
+      const result = await service.addPageBreakItem(
+        formId,
+        args.title,
+        args.description,
+        args.index,
+      );
       return {
         content: [
           {

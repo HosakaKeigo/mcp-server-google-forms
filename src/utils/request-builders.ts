@@ -59,7 +59,7 @@ export type UpdateFormInfoRequestParams = {
  * @returns 作成リクエストオブジェクト
  */
 export function buildCreateItemRequest(
-  params: CreateItemRequestParams
+  params: CreateItemRequestParams,
 ): forms_v1.Schema$Request | Error {
   try {
     if (!params.title) {
@@ -68,7 +68,7 @@ export function buildCreateItemRequest(
 
     // 項目データの構築
     const item: forms_v1.Schema$Item = {
-      title: params.title
+      title: params.title,
     };
 
     if (params.description) {
@@ -92,14 +92,14 @@ export function buildCreateItemRequest(
 
         item.questionItem = {
           question: {
-            required: params.required ?? false
-          }
+            required: params.required ?? false,
+          },
         };
 
         if (params.questionType === "TEXT" || params.questionType === "PARAGRAPH_TEXT") {
           if (item.questionItem?.question) {
             item.questionItem.question.textQuestion = {
-              paragraph: params.questionType === "PARAGRAPH_TEXT"
+              paragraph: params.questionType === "PARAGRAPH_TEXT",
             };
           }
         } else {
@@ -108,17 +108,22 @@ export function buildCreateItemRequest(
             throw new Error("選択式質問には選択肢が必要です");
           }
 
-          const optionsArray: forms_v1.Schema$Option[] = params.options.map(opt => ({ value: opt }));
+          const optionsArray: forms_v1.Schema$Option[] = params.options.map((opt) => ({
+            value: opt,
+          }));
 
           // 「その他」オプションの追加
-          if (params.includeOther && (params.questionType === "RADIO" || params.questionType === "CHECKBOX")) {
+          if (
+            params.includeOther &&
+            (params.questionType === "RADIO" || params.questionType === "CHECKBOX")
+          ) {
             optionsArray.push({ isOther: true });
           }
 
           if (item.questionItem?.question) {
             item.questionItem.question.choiceQuestion = {
               type: params.questionType,
-              options: optionsArray
+              options: optionsArray,
             };
           }
         }
@@ -142,7 +147,9 @@ export function buildCreateItemRequest(
             throw new Error("グリッド形式の質問グループには列（選択肢）が必要です");
           }
           if (!params.gridType) {
-            throw new Error("グリッド形式の質問グループには選択タイプ（CHECKBOX または RADIO）が必要です");
+            throw new Error(
+              "グリッド形式の質問グループには選択タイプ（CHECKBOX または RADIO）が必要です",
+            );
           }
           item.questionGroupItem.grid = {
             shuffleQuestions: params.shuffleQuestions ?? false,
@@ -162,8 +169,8 @@ export function buildCreateItemRequest(
     return {
       createItem: {
         item,
-        location: { index: params.index ?? 0 }
-      }
+        location: { index: params.index ?? 0 },
+      },
     };
   } catch (error) {
     return error as Error;
@@ -178,7 +185,7 @@ export function buildCreateItemRequest(
  */
 export function buildUpdateItemRequest(
   params: UpdateItemRequestParams,
-  currentItem?: forms_v1.Schema$Item
+  currentItem?: forms_v1.Schema$Item,
 ): forms_v1.Schema$Request | Error {
   try {
     const item: Partial<forms_v1.Schema$Item> = {};
@@ -187,12 +194,12 @@ export function buildUpdateItemRequest(
     // 更新するフィールドを設定
     if (params.title !== undefined) {
       item.title = params.title;
-      updateMaskParts.push('title');
+      updateMaskParts.push("title");
     }
 
     if (params.description !== undefined) {
       item.description = params.description;
-      updateMaskParts.push('description');
+      updateMaskParts.push("description");
     }
 
     // 質問項目の場合、必須設定を更新
@@ -205,7 +212,7 @@ export function buildUpdateItemRequest(
           item.questionItem.question = {};
         }
         item.questionItem.question.required = params.required;
-        updateMaskParts.push('questionItem.question.required');
+        updateMaskParts.push("questionItem.question.required");
       } else {
         throw new Error("requiredは質問項目にのみ設定できます");
       }
@@ -220,8 +227,8 @@ export function buildUpdateItemRequest(
       updateItem: {
         item: item as forms_v1.Schema$Item,
         location: { index: params.index },
-        updateMask: updateMaskParts.join(',')
-      }
+        updateMask: updateMaskParts.join(","),
+      },
     };
   } catch (error) {
     return error as Error;
@@ -233,13 +240,11 @@ export function buildUpdateItemRequest(
  * @param params パラメータ
  * @returns 削除リクエストオブジェクト
  */
-export function buildDeleteItemRequest(
-  params: DeleteItemRequestParams
-): forms_v1.Schema$Request {
+export function buildDeleteItemRequest(params: DeleteItemRequestParams): forms_v1.Schema$Request {
   return {
     deleteItem: {
-      location: { index: params.index }
-    }
+      location: { index: params.index },
+    },
   };
 }
 
@@ -248,14 +253,12 @@ export function buildDeleteItemRequest(
  * @param params パラメータ
  * @returns 移動リクエストオブジェクト
  */
-export function buildMoveItemRequest(
-  params: MoveItemRequestParams
-): forms_v1.Schema$Request {
+export function buildMoveItemRequest(params: MoveItemRequestParams): forms_v1.Schema$Request {
   return {
     moveItem: {
       originalLocation: { index: params.index },
-      newLocation: { index: params.newIndex }
-    }
+      newLocation: { index: params.newIndex },
+    },
   };
 }
 
@@ -265,7 +268,7 @@ export function buildMoveItemRequest(
  * @returns 更新リクエストオブジェクト
  */
 export function buildUpdateFormInfoRequest(
-  params: UpdateFormInfoRequestParams
+  params: UpdateFormInfoRequestParams,
 ): forms_v1.Schema$Request | Error {
   try {
     const info: { title?: string; description?: string } = {};
@@ -273,12 +276,12 @@ export function buildUpdateFormInfoRequest(
 
     if (params.title !== undefined) {
       info.title = params.title;
-      updateMaskParts.push('title');
+      updateMaskParts.push("title");
     }
 
     if (params.description !== undefined) {
       info.description = params.description;
-      updateMaskParts.push('description');
+      updateMaskParts.push("description");
     }
 
     // 更新するフィールドがない場合はエラー
@@ -289,8 +292,8 @@ export function buildUpdateFormInfoRequest(
     return {
       updateFormInfo: {
         info,
-        updateMask: updateMaskParts.join(',')
-      }
+        updateMask: updateMaskParts.join(","),
+      },
     };
   } catch (error) {
     return error as Error;

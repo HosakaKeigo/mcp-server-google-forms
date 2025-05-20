@@ -1,12 +1,12 @@
 import { forms, type forms_v1 } from "@googleapis/forms";
 import { GoogleAuth } from "google-auth-library";
 import {
+  type CreateItemRequestParams,
   buildCreateItemRequest,
-  buildUpdateItemRequest,
   buildDeleteItemRequest,
   buildMoveItemRequest,
   buildUpdateFormInfoRequest,
-  type CreateItemRequestParams,
+  buildUpdateItemRequest,
 } from "./request-builders.js";
 
 /**
@@ -123,7 +123,7 @@ export class GFormService {
         title,
         description,
         index: itemIndex,
-        itemType: itemType.type
+        itemType: itemType.type,
       };
 
       // 項目タイプに基づいてパラメータを追加
@@ -231,7 +231,7 @@ export class GFormService {
       // buildMoveItemRequestを使用
       const request = buildMoveItemRequest({
         index: originalIndex,
-        newIndex: newIndex
+        newIndex: newIndex,
       });
 
       return await this.batchUpdateForm(formId, [request]);
@@ -253,7 +253,7 @@ export class GFormService {
     try {
       const request = buildUpdateFormInfoRequest({
         title,
-        description
+        description,
       });
 
       if (request instanceof Error) {
@@ -278,7 +278,7 @@ export class GFormService {
     try {
       // buildDeleteItemRequestを使用
       const request = buildDeleteItemRequest({
-        index: index
+        index: index,
       });
 
       return await this.batchUpdateForm(formId, [request]);
@@ -443,12 +443,15 @@ export class GFormService {
       }
 
       const currentItem = form.items[index];
-      const request = buildUpdateItemRequest({
-        index,
-        title: item.title ?? undefined,
-        description: item.description ?? undefined,
-        required: item.questionItem?.question?.required ?? undefined,
-      }, currentItem);
+      const request = buildUpdateItemRequest(
+        {
+          index,
+          title: item.title ?? undefined,
+          description: item.description ?? undefined,
+          required: item.questionItem?.question?.required ?? undefined,
+        },
+        currentItem,
+      );
 
       if (request instanceof Error) {
         throw request;
