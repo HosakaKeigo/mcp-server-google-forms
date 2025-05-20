@@ -269,4 +269,49 @@ export class GFormService {
       throw new Error(`フォームの項目削除中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
+  /**
+   * フォームにページ区切りを追加する
+   * @param formId フォームID
+   * @param title タイトル
+   * @param description 説明（省略可）
+   * @param index 挿入位置（省略時は先頭）
+   * @returns 更新結果
+   */
+  async addPageBreakItem(formId: string, title: string, description?: string, index: number = 0): Promise<any> {
+    try {
+      const itemData: {
+        title: string;
+        description?: string;
+        pageBreakItem: Record<string, never>;
+      } = {
+        title: title,
+        pageBreakItem: {}
+      };
+
+      if (description) {
+        itemData.description = description;
+      }
+
+      const result = await this.formClient.forms.batchUpdate({
+        formId,
+        requestBody: {
+          requests: [
+            {
+              createItem: {
+                item: itemData,
+                location: {
+                  index: index
+                }
+              }
+            }
+          ],
+          includeFormInResponse: true
+        }
+      });
+      return result.data;
+    } catch (error) {
+      throw new Error(`フォームへのページ区切り追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
