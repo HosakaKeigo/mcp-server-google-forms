@@ -57,13 +57,17 @@ export class DeleteItemTool {
       const itemToDelete = form.items[args.index];
 
       // 項目を削除
-      await service.deleteItem(formId, args.index);
+      const result = await service.deleteItem(formId, args.index);
+      const currentFormItems = result.form?.items;
 
       return {
         content: [
           {
             type: "text",
-            text: `インデックス ${args.index} の項目「${itemToDelete.title || "無題"}」を削除しました。`,
+            text: `インデックス ${args.index} の項目「${itemToDelete.title || "無題"}」を削除しました。
+削除後のフォームの項目は以下の通りです：
+
+${JSON.stringify(currentFormItems, null, 2)}。`,
           },
         ],
       };

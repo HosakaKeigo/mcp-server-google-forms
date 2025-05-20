@@ -104,12 +104,13 @@ export class UpdateItemTool {
       }
 
       // 項目を更新
-      await service.updateItem(
+      const result = await service.updateItem(
         formId,
         args.index,
         item,
         updateMaskParts.join(',')
       );
+      const currentItems = result.form?.items;
 
       // 更新内容のメッセージを作成
       let message = `インデックス ${args.index} の項目を更新しました: `;
@@ -133,7 +134,8 @@ export class UpdateItemTool {
         content: [
           {
             type: "text",
-            text: message,
+            text: message +
+              `\n更新後のフォームの項目は以下の通りです：\n\n${JSON.stringify(currentItems, null, 2)}。`,
           },
         ],
       };

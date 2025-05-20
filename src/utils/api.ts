@@ -366,7 +366,7 @@ export class GFormService {
    * @param index 削除する項目のインデックス
    * @returns 更新結果
    */
-  async deleteItem(formId: string, index: number): Promise<any> {
+  async deleteItem(formId: string, index: number) {
     try {
       const result = await this.formClient.forms.batchUpdate({
         formId,
@@ -557,7 +557,7 @@ export class GFormService {
     index: number,
     item: forms_v1.Schema$Item,
     updateMask: string
-  ): Promise<any> {
+  ) {
     try {
       const result = await this.formClient.forms.batchUpdate({
         formId,
