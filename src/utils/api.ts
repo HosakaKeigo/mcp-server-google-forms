@@ -1,4 +1,4 @@
-import { forms } from "@googleapis/forms"
+import { forms, forms_v1 } from "@googleapis/forms"
 import { GoogleAuth } from 'google-auth-library';
 import { GoogleApiError } from '../types/index.js';
 
@@ -6,40 +6,19 @@ import { GoogleApiError } from '../types/index.js';
  * Google Forms APIを操作するためのサービスクラス
  */
 export class GFormService {
-  private auth: GoogleAuth;
-  private readonly BASE_URL = "https://forms.googleapis.com/v1";
+  private formClient: forms_v1.Forms;
 
   /**
    * GFormServiceのコンストラクタ
    */
   constructor() {
-    this.auth = new GoogleAuth({
+    const auth = new GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/forms']
     });
-  }
-
-  /**
-   * Forms APIクライアントを取得する
-   * @returns Forms APIクライアント
-   */
-  private async getClient() {
-    return forms({
+    this.formClient = forms({
       version: "v1",
-      auth: this.auth
+      auth
     });
-  }
-
-  /**
-   * 認証用のヘッダーを取得する
-   * @returns 認証用ヘッダー
-   */
-  private async getAuthHeaders() {
-    const client = await this.auth.getClient();
-    const token = await client.getAccessToken();
-    return {
-      'Authorization': `Bearer ${token.token}`,
-      'Content-Type': 'application/json'
-    };
   }
 
   /**
@@ -49,8 +28,7 @@ export class GFormService {
    */
   async getForm(formId: string): Promise<any> {
     try {
-      const client = await this.getClient();
-      const form = await client.forms.get({
+      const form = await this.formClient.forms.get({
         formId
       });
 
@@ -71,52 +49,114 @@ export class GFormService {
   }
 
   /**
-   * フォームに項目を追加する
+   * フォームにテキスト項目を追加する
    * @param formId フォームID
-   * @param itemData 追加する項目のデータ
+   * @param title タイトル
+   * @param description 説明（省略可）
+   * @param index 挿入位置（省略時は先頭）
    * @returns 更新結果
    */
-  async addItem(formId: string, itemData: any): Promise<any> {
+  async addTextItem(formId: string, title: string, description?: string, index: number = 0): Promise<any> {
     try {
-      const updateData = {
-        requests: [
-          {
-            createItem: {
-              item: itemData
-            }
-          }
-        ]
+      const itemData: {
+        title: string;
+        description?: string;
+        textItem: Record<string, never>;
+      } = {
+        title: title,
+        textItem: {}
       };
 
-      return await this.updateForm(formId, updateData);
+      if (description) {
+        itemData.description = description;
+      }
+
+      const result = await this.formClient.forms.batchUpdate({
+        formId,
+        requestBody: {
+          requests: [
+            {
+              createItem: {
+                item: itemData,
+                location: {
+                  index: index
+                }
+              }
+            }
+          ],
+          includeFormInResponse: true
+        }
+      });
+      return result.data;
     } catch (error) {
-      throw new Error(`フォームへの項目追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`フォームへのテキスト項目追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   /**
-   * Google Forms APIを使用してフォームを更新する
+   * フォームに質問項目を追加する
    * @param formId フォームID
-   * @param updateData 更新データ
+   * @param title タイトル
+   * @param questionType 質問タイプ
+   * @param options 選択肢（選択式の場合）
+   * @param required 必須かどうか
+   * @param index 挿入位置（省略時は先頭）
    * @returns 更新結果
    */
-  async updateForm(formId: string, updateData: any): Promise<any> {
+  async addQuestionItem(
+    formId: string,
+    title: string,
+    questionType: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROPDOWN",
+    options?: string[],
+    required: boolean = false,
+    index: number = 0
+  ): Promise<any> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`${this.BASE_URL}/forms/${formId}:batchUpdate`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(updateData),
-      });
+      const itemData: any = {
+        title: title,
+        questionItem: {
+          question: {
+            required: required
+          }
+        }
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json() as GoogleApiError;
-        throw new Error(`API Error (${response.status}): ${errorData.error.message}`);
+      // 質問タイプに応じた設定
+      if (questionType === "TEXT" || questionType === "PARAGRAPH_TEXT") {
+        itemData.questionItem.question.textQuestion = {
+          paragraph: questionType === "PARAGRAPH_TEXT"
+        };
+      } else {
+        // 選択式の質問（RADIO, CHECKBOX, DROPDOWN）
+        if (!options || options.length === 0) {
+          throw new Error("選択式の質問にはオプションが必要です");
+        }
+
+        itemData.questionItem.question.choiceQuestion = {
+          type: questionType,
+          options: options.map(opt => ({ value: opt }))
+        };
       }
 
-      return await response.json();
+      const result = await this.formClient.forms.batchUpdate({
+        formId,
+        requestBody: {
+          requests: [
+            {
+              createItem: {
+                item: itemData,
+                location: {
+                  index: index
+                }
+              }
+            }
+          ],
+          includeFormInResponse: true
+        }
+      });
+      return result.data;
     } catch (error) {
-      throw new Error(`フォームの更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`フォームへの質問項目追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }
