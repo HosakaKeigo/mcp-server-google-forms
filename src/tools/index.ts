@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { IMCPTool } from "../types/index.js";
 import { AddPageBreakItemTool } from "./add-page-break-item.js";
 import { AddQuestionGroupItemTool } from "./add-question-group-item.js";
 import { AddQuestionItemTool } from "./add-question-item.js";
@@ -17,7 +18,7 @@ import { UpdateSettingsTool } from "./update-settings.js";
  * @param server MCPサーバーインスタンス
  */
 export function registerTools(server: McpServer): void {
-  const tools = [
+  const tools: IMCPTool[] = [
     new GetFormTool(),
     new AddTextItemTool(),
     new AddQuestionItemTool(),

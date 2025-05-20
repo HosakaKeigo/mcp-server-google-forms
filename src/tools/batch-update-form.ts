@@ -4,9 +4,10 @@ import { z } from "zod";
 import {
   type BatchUpdateOperation,
   FormUrlSchema,
+  type InferZodParams,
   ItemTypeSchema,
   OperationTypeSchema,
-  QuestionTypeSchema
+  QuestionTypeSchema,
 } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
@@ -77,10 +78,7 @@ export class BatchUpdateFormTool {
    * @param args ツールの引数
    * @returns ツールの実行結果
    */
-  async execute(args: {
-    form_url: string;
-    operations: BatchUpdateOperation[];
-  }): Promise<{
+  async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
@@ -272,11 +270,9 @@ ${JSON.stringify(result.form, null, 2)}`,
  * batch update用の操作リストをソートする
  * create_itemは追加順が逆順になるため、逆順にして先頭に配置する
  */
-function sortBatchOperations(
-  operations: BatchUpdateOperation[],
-) {
-  const createOps = operations.filter(op => op.operation === 'create_item');
-  const otherOps = operations.filter(op => op.operation !== 'create_item');
+function sortBatchOperations(operations: BatchUpdateOperation[]) {
+  const createOps = operations.filter((op) => op.operation === "create_item");
+  const otherOps = operations.filter((op) => op.operation !== "create_item");
   const reversedCreateOps = [...createOps].reverse();
   return [...reversedCreateOps, ...otherOps];
 }

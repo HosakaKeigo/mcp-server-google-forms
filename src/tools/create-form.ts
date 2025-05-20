@@ -1,5 +1,6 @@
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import type { InferZodParams } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 
 /**
@@ -37,11 +38,7 @@ export class CreateFormTool {
    * @param args ツールの引数
    * @returns ツールの実行結果
    */
-  async execute(args: {
-    title: string;
-    document_title?: string;
-    unpublished?: boolean;
-  }): Promise<{
+  async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {

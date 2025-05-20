@@ -1,6 +1,6 @@
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { FormUrlSchema } from "../types/index.js";
+import { FormUrlSchema, type InferZodParams } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
@@ -35,12 +35,7 @@ export class AddPageBreakItemTool {
    * @param args ツールの引数
    * @returns ツールの実行結果
    */
-  async execute(args: {
-    form_url: string;
-    title: string;
-    description?: string;
-    index?: number;
-  }): Promise<{
+  async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {

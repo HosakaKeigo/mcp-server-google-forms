@@ -1,4 +1,42 @@
+import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+
+/**
+ * ZodスキーマからParamの型を推論するユーティリティ型
+ */
+export type InferZodParams<T extends Record<string, z.ZodType>> = {
+  [K in keyof T]: z.infer<T[K]>;
+};
+
+/**
+ * Interface for MCP tools
+ */
+export interface IMCPTool<TParams extends Record<string, z.ZodType> = Record<string, z.ZodType>> {
+  /**
+   * Tool name
+   */
+  readonly name: string;
+
+  /**
+   * Tool description
+   */
+  readonly description: string;
+
+  /**
+   * Parameter definitions
+   */
+  readonly parameters: TParams;
+
+  /**
+   * Execute the tool
+   * @param args Parameters
+   * @returns Execution result
+   */
+  execute(args: InferZodParams<TParams>): Promise<{
+    content: TextContent[];
+    isError?: boolean;
+  }>;
+}
 
 /**
  * フォームIDの型定義
@@ -37,7 +75,12 @@ export const QuestionTypeSchema = z
 /**
  * 操作タイプ
  */
-export type OperationType = "create_item" | "update_item" | "delete_item" | "move_item" | "update_form_info";
+export type OperationType =
+  | "create_item"
+  | "update_item"
+  | "delete_item"
+  | "move_item"
+  | "update_form_info";
 
 /**
  * 操作タイプのZodスキーマ
