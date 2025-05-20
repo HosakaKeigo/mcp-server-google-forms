@@ -159,4 +159,37 @@ export class GFormService {
       throw new Error(`フォームへの質問項目追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
+  /**
+   * フォームの項目を移動する
+   * @param formId フォームID
+   * @param originalIndex 移動元のインデックス
+   * @param newIndex 移動先のインデックス
+   * @returns 更新結果
+   */
+  async moveItem(formId: string, originalIndex: number, newIndex: number) {
+    try {
+      const result = await this.formClient.forms.batchUpdate({
+        formId,
+        requestBody: {
+          requests: [
+            {
+              moveItem: {
+                originalLocation: {
+                  index: originalIndex
+                },
+                newLocation: {
+                  index: newIndex
+                }
+              }
+            }
+          ],
+          includeFormInResponse: true
+        }
+      });
+      return result.data;
+    } catch (error) {
+      throw new Error(`フォームの項目移動中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
