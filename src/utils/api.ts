@@ -1,13 +1,13 @@
 import { forms, type forms_v1 } from "@googleapis/forms";
 import { GoogleAuth } from "google-auth-library";
 import {
-  type CreateItemRequestParams,
   buildCreateItemRequest,
   buildDeleteItemRequest,
   buildMoveItemRequest,
   buildUpdateFormInfoRequest,
   buildUpdateItemRequest,
 } from "./request-builders.js";
+import type { CreateItemRequestParams } from "../types/request-types.js";
 
 /**
  * Formsの質問タイプ

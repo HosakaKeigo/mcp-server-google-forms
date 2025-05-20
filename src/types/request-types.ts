@@ -1,11 +1,13 @@
+import type { ItemType, QuestionType } from "./index.js";
+
 // Google Formsリクエスト用パラメータ型定義
 
 export type CreateItemRequestParams = {
   title: string;
   description?: string;
   index?: number;
-  itemType: "text" | "question" | "pageBreak" | "questionGroup";
-  questionType?: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
+  itemType: ItemType;
+  questionType?: QuestionType;
   options?: string[];
   required?: boolean;
   includeOther?: boolean;
