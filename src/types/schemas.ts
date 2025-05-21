@@ -104,7 +104,7 @@ export const GradingSchema = z
     whenWrong: FeedbackSchema.optional().describe("Feedback when the answer is incorrect"),
     generalFeedback: FeedbackSchema.optional().describe("General feedback for the question"),
   })
-  .describe("Grading for a question. If you want to set grading, you must first set isQuiz to true with UpdateSettingsRequest.");
+  .describe("Grading for a question. If you want to set grading, you must first set isQuiz to true by sending separate batchUpdate request. You can't set isQuiz and grading in the same request. ");
 
 /**
 * Supported operations for batch updates
