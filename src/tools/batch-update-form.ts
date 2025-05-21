@@ -20,97 +20,97 @@ import {
 } from "../utils/request-builders.js";
 
 /**
- * フォームの複数の項目を一括更新するMCPツール
+ * MCP tool to batch update multiple items in a form
  */
 export class BatchUpdateFormTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "batch_update_form";
 
   /**
-   * ツールの説明
+   * Tool description
    */
   readonly description =
-    "Google Formsの複数の更新操作を一括で実行します。項目の追加・更新・削除・移動などを一度に行えます。";
+    "Execute multiple update operations on Google Forms in a single batch. You can add, update, delete, and move items all at once. Use this tool preferentially as it's more efficient.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameter definitions
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
     operations: z
       .array(
         z.object({
-          // 操作タイプ
+          // Operation type
           operation: OperationTypeSchema,
 
-          // 共通パラメータ
-          index: z.number().optional().describe("操作対象の項目インデックス（必要な場合）"),
+          // Common parameters
+          index: z.number().optional().describe("Index of the target item (when needed)"),
 
-          // 項目作成・更新用パラメータ
-          title: z.string().optional().describe("項目のタイトル"),
-          description: z.string().optional().describe("項目の説明"),
+          // Parameters for creating and updating items
+          title: z.string().optional().describe("Item title"),
+          description: z.string().optional().describe("Item description"),
 
-          // 項目タイプ情報（create_item用）
+          // Item type information (for create_item)
           item_type: ItemTypeSchema.optional(),
 
-          // 質問タイプ情報（質問作成時）
+          // Question type information (when creating questions)
           question_type: QuestionTypeSchema.optional(),
-          options: z.array(z.string()).optional().describe("選択肢のリスト（選択式質問の場合）"),
-          required: z.boolean().optional().describe("質問が必須かどうか"),
+          options: z.array(z.string()).optional().describe("List of options (for multiple-choice questions)"),
+          required: z.boolean().optional().describe("Whether the question is required"),
           include_other: z
             .boolean()
             .optional()
-            .describe("「その他」オプションを含めるか（選択式質問の場合）"),
+            .describe("Whether to include an 'Other' option (for multiple-choice questions)"),
 
-          // 移動用パラメータ
-          new_index: z.number().optional().describe("移動先のインデックス（move_item時に必要）"),
+          // Parameters for moving items
+          new_index: z.number().optional().describe("Destination index (required when using move_item)"),
         }),
       )
-      .describe("実行する操作のリスト"),
+      .describe("List of operations to execute"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Tool execution
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // サービスのインスタンス化
+      // Initialize service
       const service = new GFormService();
 
-      // フォーム情報を取得（インデックスの検証など）
+      // Get form information (for index validation, etc.)
       const form = await service.getForm(formId);
       if (!form) {
-        throw new Error("フォームが見つかりませんでした。");
+        throw new Error("Form not found.");
       }
 
-      // リクエストの準備
+      // Prepare requests
       const requests: forms_v1.Schema$Request[] = [];
-      // create_itemは追加順が逆順になるため、ソートしておく。
+      // Sort create_item operations because they are processed in reverse order
       const processedOps = sortBatchOperations(args.operations);
 
-      // 各操作をリクエストに変換
+      // Convert each operation to a request
       for (const [opIndex, op] of processedOps.entries()) {
         try {
           let request: forms_v1.Schema$Request | Error | undefined;
           switch (op.operation) {
             case "create_item": {
               if (!op.item_type) {
-                throw new Error(`操作 #${opIndex + 1}: 項目作成時はitem_typeが必須です`);
+                throw new Error(`Operation #${opIndex + 1}: item_type is required when creating an item`);
               }
               if (!op.title) {
-                throw new Error(`操作 #${opIndex + 1}: 項目作成時はtitleが必須です`);
+                throw new Error(`Operation #${opIndex + 1}: title is required when creating an item`);
               }
               request = buildCreateItemRequest({
                 title: op.title,
@@ -126,10 +126,10 @@ export class BatchUpdateFormTool {
             }
             case "update_item": {
               if (op.index === undefined) {
-                throw new Error(`操作 #${opIndex + 1}: 項目更新時はindexが必須です`);
+                throw new Error(`Operation #${opIndex + 1}: index is required when updating an item`);
               }
               if (op.index < 0 || !form.items || op.index >= form.items.length) {
-                throw new Error(`操作 #${opIndex + 1}: インデックス ${op.index} が範囲外です`);
+                throw new Error(`Operation #${opIndex + 1}: Index ${op.index} is out of range`);
               }
               const currentItem = form.items[op.index];
               request = buildUpdateItemRequest(
@@ -145,27 +145,27 @@ export class BatchUpdateFormTool {
             }
             case "delete_item": {
               if (op.index === undefined) {
-                throw new Error(`操作 #${opIndex + 1}: 項目削除時はindexが必須です`);
+                throw new Error(`Operation #${opIndex + 1}: index is required when deleting an item`);
               }
               if (op.index < 0 || !form.items || op.index >= form.items.length) {
-                throw new Error(`操作 #${opIndex + 1}: インデックス ${op.index} が範囲外です`);
+                throw new Error(`Operation #${opIndex + 1}: Index ${op.index} is out of range`);
               }
               request = buildDeleteItemRequest({ index: op.index });
               break;
             }
             case "move_item": {
               if (op.index === undefined) {
-                throw new Error(`操作 #${opIndex + 1}: 項目移動時はindexが必須です`);
+                throw new Error(`Operation #${opIndex + 1}: index is required when moving an item`);
               }
               if (op.new_index === undefined) {
-                throw new Error(`操作 #${opIndex + 1}: 項目移動時はnew_indexが必須です`);
+                throw new Error(`Operation #${opIndex + 1}: new_index is required when moving an item`);
               }
               if (op.index < 0 || !form.items || op.index >= form.items.length) {
-                throw new Error(`操作 #${opIndex + 1}: インデックス ${op.index} が範囲外です`);
+                throw new Error(`Operation #${opIndex + 1}: Index ${op.index} is out of range`);
               }
               if (op.new_index < 0 || op.new_index > form.items.length) {
                 throw new Error(
-                  `操作 #${opIndex + 1}: 新しいインデックス ${op.new_index} が範囲外です`,
+                  `Operation #${opIndex + 1}: New index ${op.new_index} is out of range`,
                 );
               }
               request = buildMoveItemRequest({ index: op.index, newIndex: op.new_index });
@@ -179,39 +179,39 @@ export class BatchUpdateFormTool {
               break;
             }
             default:
-              throw new Error(`操作 #${opIndex + 1}: 不明な操作タイプ: ${op.operation}`);
+              throw new Error(`Operation #${opIndex + 1}: Unknown operation type: ${op.operation}`);
           }
           if (request instanceof Error) {
-            throw new Error(`操作 #${opIndex + 1}: ${request.message}`);
+            throw new Error(`Operation #${opIndex + 1}: ${request.message}`);
           }
           requests.push(request);
         } catch (error) {
           throw new Error(
-            `操作 #${opIndex + 1}でエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+            `Error occurred in operation #${opIndex + 1}: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
       }
 
-      // リクエストが空の場合はエラー
+      // Error if there are no requests
       if (requests.length === 0) {
-        throw new Error("実行する操作がありません");
+        throw new Error("No operations to execute");
       }
 
-      // バッチ更新を実行
+      // Execute batch update
       const result = await service.batchUpdateForm(formId, requests);
 
       return {
         content: [
           {
             type: "text",
-            text: `${requests.length}件の操作を一括実行しました。
+            text: `Executed ${requests.length} operations in batch.
 
-操作内容:
+Operations:
 ${args.operations.map((op, i) => `${i + 1}. ${this.formatOperation(op)}`).join("\n")}
 
-現在のフォームには ${result.form?.items?.length ?? 0} 個の項目があります。
+The form now has ${result.form?.items?.length ?? 0} items.
 
-変更後のフォーム情報:
+Updated form information:
 ${JSON.stringify(result.form, null, 2)}`,
           },
         ],
@@ -221,7 +221,7 @@ ${JSON.stringify(result.form, null, 2)}`,
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,
@@ -230,45 +230,45 @@ ${JSON.stringify(result.form, null, 2)}`,
   }
 
   /**
-   * 操作内容を人間が読みやすい形式にフォーマットする
-   * @param op 操作オブジェクト
-   * @returns フォーマットされた操作の説明
+   * Format operation details in a human-readable format
+   * @param op Operation object
+   * @returns Formatted description of the operation
    */
   private formatOperation(op: BatchUpdateOperation): string {
     switch (op.operation) {
       case "create_item":
-        return `項目作成: タイプ=${op.item_type}, タイトル="${op.title}"${op.index !== undefined ? `, 位置=${op.index}` : ""}`;
+        return `Create item: type=${op.item_type}, title="${op.title}"${op.index !== undefined ? `, position=${op.index}` : ""}`;
 
       case "update_item": {
         const updates: string[] = [];
-        if (op.title !== undefined) updates.push(`タイトル="${op.title}"`);
-        if (op.description !== undefined) updates.push(`説明="${op.description}"`);
-        if (op.required !== undefined) updates.push(`必須=${op.required}`);
-        return `項目更新: インデックス=${op.index}, 更新内容: ${updates.join(", ")}`;
+        if (op.title !== undefined) updates.push(`title="${op.title}"`);
+        if (op.description !== undefined) updates.push(`description="${op.description}"`);
+        if (op.required !== undefined) updates.push(`required=${op.required}`);
+        return `Update item: index=${op.index}, changes: ${updates.join(", ")}`;
       }
 
       case "delete_item":
-        return `項目削除: インデックス=${op.index}`;
+        return `Delete item: index=${op.index}`;
 
       case "move_item":
-        return `項目移動: インデックス=${op.index} → ${op.new_index}`;
+        return `Move item: index=${op.index} → ${op.new_index}`;
 
       case "update_form_info": {
         const updates: string[] = [];
-        if (op.title !== undefined) updates.push(`タイトル="${op.title}"`);
-        if (op.description !== undefined) updates.push(`説明="${op.description}"`);
-        return `フォーム情報更新: ${updates.join(", ")}`;
+        if (op.title !== undefined) updates.push(`title="${op.title}"`);
+        if (op.description !== undefined) updates.push(`description="${op.description}"`);
+        return `Update form info: ${updates.join(", ")}`;
       }
 
       default:
-        return `不明な操作: ${op.operation}`;
+        return `Unknown operation: ${op.operation}`;
     }
   }
 }
 
 /**
- * batch update用の操作リストをソートする
- * create_itemは追加順が逆順になるため、逆順にして先頭に配置する
+ * Sort the list of operations for batch update
+ * Reverse the create_item operations because they are processed in reverse order
  */
 function sortBatchOperations(operations: BatchUpdateOperation[]) {
   const createOps = operations.filter((op) => op.operation === "create_item");

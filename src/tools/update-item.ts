@@ -6,84 +6,84 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォームの項目を更新するMCPツール
+ * MCP tool to update a form item
  */
 export class UpdateItemTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "update_item";
 
   /**
-   * ツールの説明
+   * Tool description
    */
   readonly description =
-    "Google Formsの既存項目を更新します。項目のタイトルや説明、質問の必須設定などを変更できます。";
+    "Update an existing item in Google Forms. You can change the item title, description, required settings for questions, etc.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameter definitions
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
-    index: z.number().int().min(0).describe("更新する項目のインデックス（0から始まる）"),
-    title: z.string().optional().describe("項目の新しいタイトル（省略可）"),
-    description: z.string().optional().describe("項目の新しい説明（省略可）"),
+    index: z.number().int().min(0).describe("Index of the item to update (starting from 0)"),
+    title: z.string().optional().describe("New title for the item (optional)"),
+    description: z.string().optional().describe("New description for the item (optional)"),
     required: z
       .boolean()
       .optional()
-      .describe("質問項目の必須設定（省略可、質問項目の場合のみ有効）"),
+      .describe("Required setting for question items (optional, only valid for question items)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Tool execution
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // サービスのインスタンス化
+      // Initialize service
       const service = new GFormService();
 
-      // フォーム情報取得（インデックスの確認と現在の項目情報取得のため）
+      // Get form information (to verify index and retrieve current item information)
       const form = await service.getForm(formId);
 
-      // インデックスの範囲確認
+      // Check index range
       if (args.index < 0 || !form.items || args.index >= form.items.length) {
         throw new Error(
-          `インデックス ${args.index} が範囲外です。フォームには ${form.items ? form.items.length : 0} 個の項目があります。`,
+          `Index ${args.index} is out of range. The form has ${form.items ? form.items.length : 0} items.`,
         );
       }
 
-      // 現在の項目情報を取得
+      // Retrieve current item information
       const currentItem = form.items[args.index];
 
-      // 更新オブジェクトとupdate_maskの作成
+      // Create update object and update_mask
       const item: forms_v1.Schema$Item = {};
       const updateMaskParts: string[] = [];
 
-      // タイトルの更新
+      // Update title
       if (args.title !== undefined) {
         item.title = args.title;
         updateMaskParts.push("title");
       }
 
-      // 説明の更新
+      // Update description
       if (args.description !== undefined) {
         item.description = args.description;
         updateMaskParts.push("description");
       }
 
-      // 必須設定の更新（質問項目の場合のみ）
+      // Update required setting (only for question items)
       if (args.required !== undefined) {
-        // 質問項目かどうかチェック
+        // Check if it's a question item
         if (currentItem.questionItem) {
           if (!item.questionItem) {
             item.questionItem = {
@@ -96,41 +96,41 @@ export class UpdateItemTool {
           item.questionItem.question.required = args.required;
           updateMaskParts.push("questionItem.question.required");
         } else {
-          throw new Error("required パラメータは質問項目（questionItem）にのみ適用できます");
+          throw new Error("The 'required' parameter can only be applied to question items (questionItem)");
         }
       }
 
-      // 更新すべき項目がない場合はエラー
+      // Error if no items to update
       if (updateMaskParts.length === 0) {
-        throw new Error("更新すべき項目を少なくとも1つ指定してください");
+        throw new Error("Please specify at least one field to update");
       }
 
-      // 項目を更新
+      // Update the item
       const result = await service.updateItem(formId, args.index, item);
 
-      // 更新内容のメッセージを作成
-      let message = `インデックス ${args.index} の項目を更新しました: `;
+      // Create message with update details
+      let message = `Updated item at index ${args.index}: `;
       const updates: string[] = [];
 
       if (args.title !== undefined) {
-        updates.push(`タイトル「${args.title}」`);
+        updates.push(`Title "${args.title}"`);
       }
 
       if (args.description !== undefined) {
-        updates.push(`説明「${args.description}」`);
+        updates.push(`Description "${args.description}"`);
       }
 
       if (args.required !== undefined) {
-        updates.push(`必須設定: ${args.required ? "有効" : "無効"}`);
+        updates.push(`Required setting: ${args.required ? "enabled" : "disabled"}`);
       }
 
-      message += updates.join("、");
+      message += updates.join(", ");
 
       return {
         content: [
           {
             type: "text",
-            text: `${message}\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
+            text: `${message}\n\nUpdated form information:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
@@ -139,7 +139,7 @@ export class UpdateItemTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,

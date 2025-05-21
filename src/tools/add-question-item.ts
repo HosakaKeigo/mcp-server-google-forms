@@ -24,9 +24,9 @@ export class AddQuestionItemTool {
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
-    title: z.string().describe("質問のタイトル"),
+    title: z.string().describe("Question title"),
     question_type: z
       .enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROP_DOWN"])
       .describe(

@@ -5,61 +5,61 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォームにページ区切りを追加するMCPツール
+ * MCP tool to add a page break to a form
  */
 export class AddPageBreakItemTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "add_page_break_item";
 
   /**
-   * ツールの説明
+   * Tool description
    */
-  readonly description = "Google Formsに新しいページ区切りを追加します。";
+  readonly description = "Add a new page break to Google Forms.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameter definitions
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
-    title: z.string().describe("ページ区切りのタイトル（新しいページの冒頭に表示されます）"),
-    description: z.string().optional().describe("ページ区切りの説明（省略可）"),
-    index: z.number().int().min(0).optional().describe("挿入位置（省略時は末尾）"),
+    title: z.string().describe("Page break title (displayed at the beginning of the new page)"),
+    description: z.string().optional().describe("Page break description (optional)"),
+    index: z.number().int().min(0).optional().describe("Insertion position (appends to the end if omitted)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Tool execution
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // サービスのインスタンス化
+      // Initialize service
       const service = new GFormService();
 
-      // フォーム情報取得（インデックスの確認のため）
+      // Get form information (to verify index)
       const form = await service.getForm(formId);
 
-      // インデックスの指定がある場合は範囲確認
+      // Check range if index is specified
       if (args.index !== undefined) {
         const maxIndex = form.items ? form.items.length : 0;
         if (args.index < 0 || args.index > maxIndex) {
           throw new Error(
-            `インデックス ${args.index} が範囲外です。フォームには ${maxIndex} 個の項目があります。有効な範囲は 0～${maxIndex} です。`,
+            `Index ${args.index} is out of range. The form has ${maxIndex} items. Valid range is 0-${maxIndex}.`,
           );
         }
       }
 
-      // ページ区切りを追加
+      // Add page break
       const result = await service.addPageBreakItem(
         formId,
         args.title,
@@ -70,7 +70,7 @@ export class AddPageBreakItemTool {
         content: [
           {
             type: "text",
-            text: `フォームに新しいページ区切りを追加しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
+            text: `Added a new page break to the form.\n\nUpdated form information:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
@@ -79,7 +79,7 @@ export class AddPageBreakItemTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,
