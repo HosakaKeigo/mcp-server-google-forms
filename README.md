@@ -88,16 +88,14 @@ Add the following to your claude_desktop_config.json file:
 You may restart Claude Desktop to apply the changes.
 
 ### Available Tools
-
-- `get_form`: Get the structure of a Google Form
-- `update_form_info`: Update the form's basic information (title and description)
-- `delete_item`: Delete an item from the form
-- `add_page_break_item`: Add a page break to a form
-- `add_question_group_item`: Add a question group (including grid questions) to a form
-- `update_settings`: Update form settings like email collection, quiz settings, etc.
 - `create_form`: Create a new Google Form
-- `update_item`: Update an existing item in a form
+- `get_form`: Get the structure of a Google Form
 - `batch_update_form`: Perform multiple operations on a form in a single request
+   - `update_form_info`: Update the form's basic information
+   - `update_settings`: Update form settings like email collection, quiz settings, etc.
+   - `create_item`
+   - `delete_item`
+   - `update_item`
 
 ### Available Prompts
 Not implemented yet.
