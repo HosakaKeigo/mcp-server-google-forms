@@ -1,6 +1,6 @@
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { FormUrlSchema, type InferZodParams } from "../types/index.js";
+import { FormOptionSchema, FormUrlSchema, type InferZodParams } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
@@ -32,7 +32,7 @@ export class AddQuestionItemTool {
       .describe(
         "Question type (TEXT: short text, PARAGRAPH_TEXT: long text, RADIO: radio buttons, CHECKBOX: checkboxes, DROP_DOWN: dropdown)",
       ),
-    options: z.array(z.string()).optional().describe("Options (for RADIO, CHECKBOX, DROP_DOWN)"),
+    options: z.array(FormOptionSchema).optional().describe("Options with optional branching logic (for RADIO, CHECKBOX, DROP_DOWN)"),
     required: z.boolean().optional().default(false).describe("Whether the question is required (defaults to false)"),
     include_other: z
       .boolean()
@@ -70,12 +70,23 @@ export class AddQuestionItemTool {
       // Initialize service
       const service = new GFormService();
 
+      // Convert simple string options to FormOption format if needed
+      const formattedOptions = args.options
+        ? args.options.map(option => {
+          // If this is using the old format, convert it
+          if (typeof option === 'string') {
+            return { value: option };
+          }
+          return option;
+        })
+        : undefined;
+
       // Add question item
       await service.addQuestionItem(
         formId,
         args.title,
         args.question_type,
-        args.options,
+        formattedOptions,
         args.required,
         args.include_other,
         args.index,
@@ -94,14 +105,12 @@ export class AddQuestionItemTool {
         content: [
           {
             type: "text",
-            text: `Added question item "${args.title}" (${questionTypeMap[args.question_type]}) to the form. ${
-              args.required ? "(Required)" : ""
-            }${
-              args.include_other &&
-              (args.question_type === "RADIO" || args.question_type === "CHECKBOX")
+            text: `Added question item "${args.title}" (${questionTypeMap[args.question_type]}) to the form. ${args.required ? "(Required)" : ""
+              }${args.include_other &&
+                (args.question_type === "RADIO" || args.question_type === "CHECKBOX")
                 ? "(With 'Other' option)"
                 : ""
-            }`,
+              }`,
           },
         ],
       };

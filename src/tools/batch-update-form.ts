@@ -3,6 +3,7 @@ import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import {
   type BatchUpdateOperation,
+  FormOptionSchema,
   FormUrlSchema,
   type InferZodParams,
   ItemTypeSchema,
@@ -59,7 +60,7 @@ export class BatchUpdateFormTool {
 
           // Question type information (when creating questions)
           question_type: QuestionTypeSchema.optional(),
-          options: z.array(z.string()).optional().describe("List of options (for multiple-choice questions)"),
+          options: z.array(FormOptionSchema).optional().describe("List of options with optional branching logic (for multiple-choice questions)"),
           required: z.boolean().optional().describe("Whether the question is required"),
           include_other: z
             .boolean()
@@ -237,7 +238,17 @@ ${JSON.stringify(result.form, null, 2)}`,
   private formatOperation(op: BatchUpdateOperation): string {
     switch (op.operation) {
       case "create_item":
-        return `Create item: type=${op.item_type}, title="${op.title}"${op.index !== undefined ? `, position=${op.index}` : ""}`;
+        return `Create item: type=${op.item_type}, title="${op.title}"${op.index !== undefined ? `, position=${op.index}` : ""}${op.options
+          ? `, options=[${op.options
+            .map((o) => {
+              let desc = `"${o.value}"`;
+              if (o.goToAction) desc += ` (→${o.goToAction})`;
+              else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
+              return desc;
+            })
+            .join(", ")}]`
+          : ""
+          }`;
 
       case "update_item": {
         const updates: string[] = [];

@@ -2,6 +2,7 @@ import type { forms_v1 } from "@googleapis/forms";
 import type {
   CreateItemRequestParams,
   DeleteItemRequestParams,
+  FormOption,
   MoveItemRequestParams,
   UpdateFormInfoRequestParams,
   UpdateItemRequestParams,
@@ -62,9 +63,21 @@ export function buildCreateItemRequest(
             throw new Error("Multiple-choice questions require options");
           }
 
-          const optionsArray: forms_v1.Schema$Option[] = params.options.map((opt: string) => ({
-            value: opt,
-          }));
+          // Process options with unified format
+          const optionsArray: forms_v1.Schema$Option[] = [];
+
+          for (const opt of params.options) {
+            const option: forms_v1.Schema$Option = { value: opt.value };
+
+            // Add branching logic if present
+            if (opt.goToAction) {
+              option.goToAction = opt.goToAction;
+            } else if (opt.goToSectionId) {
+              option.goToSectionId = opt.goToSectionId;
+            }
+
+            optionsArray.push(option);
+          }
 
           // Add "Other" option
           if (
@@ -109,7 +122,7 @@ export function buildCreateItemRequest(
             shuffleQuestions: params.shuffleQuestions ?? false,
             columns: {
               type: params.gridType,
-              options: params.columns.map((col: string) => ({ value: col })),
+              options: params.columns ? params.columns.map(col => ({ value: col.value })) : [],
             },
           };
         }

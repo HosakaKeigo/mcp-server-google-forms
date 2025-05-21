@@ -1,5 +1,6 @@
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import type { FormOption } from "./request-types.js";
 
 /**
  * Utility type to infer parameter types from Zod schema
@@ -73,6 +74,27 @@ export const QuestionTypeSchema = z
   .describe("Type of question");
 
 /**
+ * Go To Action type for branching
+ */
+export type GoToActionType = "NEXT_SECTION" | "RESTART_FORM" | "SUBMIT_FORM";
+
+/**
+ * Zod schema for Go To Action type
+ */
+export const GoToActionSchema = z
+  .enum(["NEXT_SECTION", "RESTART_FORM", "SUBMIT_FORM"])
+  .describe("Type of branching action");
+
+/**
+ * Option with branching capability schema
+ */
+export const FormOptionSchema = z.object({
+  value: z.string().describe("Option text value"),
+  goToAction: GoToActionSchema.optional().describe("Branching action to take when this option is selected"),
+  goToSectionId: z.string().optional().describe("Section ID to navigate to when this option is selected")
+}).describe("Form option with optional branching capability");
+
+/**
  * Operation type
  */
 export type OperationType =
@@ -99,7 +121,7 @@ export type BatchUpdateOperation = {
   description?: string;
   item_type?: ItemType;
   question_type?: QuestionType;
-  options?: string[];
+  options?: FormOption[];
   required?: boolean;
   include_other?: boolean;
   new_index?: number;

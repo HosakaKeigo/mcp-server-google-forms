@@ -1,5 +1,15 @@
 import type { ItemType, QuestionType } from "./index.js";
 
+// GoToAction enum for branching in forms
+export type GoToAction = "NEXT_SECTION" | "RESTART_FORM" | "SUBMIT_FORM";
+
+// Option with unified format
+export type FormOption = {
+  value: string;
+  goToAction?: GoToAction;
+  goToSectionId?: string;
+};
+
 // Parameter type definitions for Google Forms requests
 
 export type CreateItemRequestParams = {
@@ -8,13 +18,13 @@ export type CreateItemRequestParams = {
   index?: number;
   itemType: ItemType;
   questionType?: QuestionType;
-  options?: string[];
+  options?: FormOption[];
   required?: boolean;
   includeOther?: boolean;
   // For question_group only
   rows?: { title: string; required?: boolean }[];
   isGrid?: boolean;
-  columns?: string[];
+  columns?: FormOption[];
   gridType?: "CHECKBOX" | "RADIO";
   shuffleQuestions?: boolean;
 };

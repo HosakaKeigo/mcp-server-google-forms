@@ -1,7 +1,7 @@
 import { forms, type forms_v1 } from "@googleapis/forms";
 import { GoogleAuth } from "google-auth-library";
 import { ERROR_MESSAGES } from "../constants/errors.js";
-import type { CreateItemRequestParams } from "../types/request-types.js";
+import type { CreateItemRequestParams, GoToAction, FormOption } from "../types/request-types.js";
 import {
   buildCreateItemRequest,
   buildDeleteItemRequest,
@@ -24,7 +24,7 @@ export type FormItemData = {
   question: {
     required: boolean;
     questionType: QuestionType;
-    options?: string[];
+    options?: FormOption[];
     includeOther?: boolean;
   };
   questionGroup: {
@@ -142,7 +142,9 @@ export class GFormService {
           createItemParams.rows = qgData.rows;
           createItemParams.isGrid = qgData.isGrid;
           if (qgData.isGrid) {
-            createItemParams.columns = qgData.columns;
+            createItemParams.columns = qgData.columns?.map((col) => ({
+              value: col
+            }));
             createItemParams.gridType = qgData.gridType;
             createItemParams.shuffleQuestions = qgData.shuffleQuestions;
           }
@@ -189,8 +191,9 @@ export class GFormService {
    * @param formId Form ID
    * @param title Title
    * @param questionType Question type
-   * @param options Options (for selection-type questions)
+   * @param options Options (for selection-type questions) with optional branching logic
    * @param required Whether the question is required
+   * @param includeOther Whether to include an "Other" option
    * @param index Insertion position (end of form if omitted)
    * @returns Update result
    */
@@ -198,7 +201,7 @@ export class GFormService {
     formId: string,
     title: string,
     questionType: "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN",
-    options?: string[],
+    options?: FormOption[],
     required = false,
     includeOther = false,
     index?: number,
