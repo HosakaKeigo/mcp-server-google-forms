@@ -1,15 +1,6 @@
 import type { forms_v1 } from "@googleapis/forms";
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
-import {
-  type BatchUpdateOperation,
-  FormOptionSchema,
-  FormUrlSchema,
-  type InferZodParams,
-  ItemTypeSchema,
-  OperationTypeSchema,
-  QuestionTypeSchema,
-} from "../types/index.js";
+import { SUPPORTED_OPERATIONS, type InferZodParams } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 import {
@@ -19,6 +10,8 @@ import {
   buildUpdateFormInfoRequest,
   buildUpdateItemRequest,
 } from "../utils/request-builders.js";
+import { BatchUpdateFormSchema } from "../types/schemas.js";
+import type { BatchUpdateOperation } from "../types/request-types.js";
 
 /**
  * MCP tool to batch update multiple items in a form
@@ -33,66 +26,12 @@ export class BatchUpdateFormTool {
    * Tool description
    */
   readonly description =
-    "Execute multiple update operations on Google Forms in a single batch. You can add, update, delete, and move items all at once. Use this tool preferentially as it's more efficient.";
+    `Execute multiple update operations on Google Forms in a single batch. You can add, update, delete, and move items all at once. Supported operations: ${SUPPORTED_OPERATIONS.join(", ")}`;
 
   /**
    * Tool parameter definitions
    */
-  readonly parameters = {
-    form_url: FormUrlSchema.describe(
-      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
-    ),
-    operations: z
-      .array(
-        z.object({
-          // Operation type
-          operation: OperationTypeSchema,
-
-          createItemRequest: z.object({
-            title: z.string().describe("Item title"),
-            description: z.string().optional().describe("Item description"),
-            index: z.number().optional().describe("Insertion position (appends to the end if omitted)"),
-            item_type: ItemTypeSchema.describe("Type of item to create"),
-            question_type: QuestionTypeSchema.optional().describe("Type of question (required when creating question items)"),
-            options: z.array(FormOptionSchema).optional().describe("List of options with optional branching logic"),
-            required: z.boolean().optional().describe("Whether the question is required"),
-            include_other: z.boolean().optional().describe("Whether to include an 'Other' option"),
-            // For question_group only
-            rows: z.array(
-              z.object({
-                title: z.string().describe("Row title"),
-                required: z.boolean().optional().describe("Whether this row is required")
-              })
-            ).optional().describe("Rows for question groups"),
-            isGrid: z.boolean().optional().describe("Whether this is a grid-style question group"),
-            columns: z.array(FormOptionSchema).optional().describe("Columns for grid-style question groups"),
-            gridType: z.enum(["CHECKBOX", "RADIO"]).optional().describe("Selection type for grid questions"),
-            shuffleQuestions: z.boolean().optional().describe("Whether to shuffle questions in the group")
-          }).optional().describe("Request object for creating an item"),
-
-          updateItemRequest: z.object({
-            item: z.any().describe("Full item object after update"),
-            index: z.number().describe("Index of the item to update"),
-            update_mask: z.string().describe(`A comma-separated list of fully qualified names of fields. Example: "user.displayName,photo"`),
-          }).optional().describe("Request object for updating an item"),
-
-          deleteItemRequest: z.object({
-            index: z.number().describe("Index of the item to delete")
-          }).optional().describe("Request object for deleting an item"),
-
-          moveItemRequest: z.object({
-            index: z.number().describe("Original index of the item to move"),
-            new_index: z.number().describe("Destination index for the item")
-          }).optional().describe("Request object for moving an item"),
-
-          updateFormInfoRequest: z.object({
-            title: z.string().optional().describe("New form title"),
-            description: z.string().optional().describe("New form description")
-          }).optional().describe("Request object for updating form information"),
-        }),
-      )
-      .describe("List of operations to execute"),
-  };
+  readonly parameters = BatchUpdateFormSchema.shape;
 
   /**
    * Tool execution
@@ -131,14 +70,15 @@ export class BatchUpdateFormTool {
                 throw new Error(`Operation #${opIndex + 1}: createItemRequest is required when creating an item`);
               }
               request = buildCreateItemRequest({
+                item_id: op.createItemRequest.item_id,
                 title: op.createItemRequest.title,
                 description: op.createItemRequest.description,
                 index: op.createItemRequest.index,
-                itemType: op.createItemRequest.item_type,
-                questionType: op.createItemRequest.question_type,
+                item_type: op.createItemRequest.item_type,
+                question_type: op.createItemRequest.question_type,
                 options: op.createItemRequest.options,
                 required: op.createItemRequest.required,
-                includeOther: op.createItemRequest.include_other,
+                include_other: op.createItemRequest.include_other,
                 rows: op.createItemRequest.rows,
                 isGrid: op.createItemRequest.isGrid,
                 columns: op.createItemRequest.columns,
@@ -170,8 +110,8 @@ export class BatchUpdateFormTool {
 
                 request = buildUpdateItemRequest({
                   item: op.updateItemRequest.item,
-                  location: { index: itemIndex },
-                  updateMask: op.updateItemRequest.update_mask,
+                  index: itemIndex,
+                  update_mask: op.updateItemRequest.update_mask,
                 });
               } else {
                 // 従来の形式はサポートしなくなったので、エラーを返す
@@ -203,7 +143,7 @@ export class BatchUpdateFormTool {
               if (newIndex < 0 || newIndex > form.items.length) {
                 throw new Error(`Operation #${opIndex + 1}: New index ${newIndex} is out of range`);
               }
-              request = buildMoveItemRequest({ index: itemIndex, newIndex: newIndex });
+              request = buildMoveItemRequest({ index: itemIndex, new_index: newIndex });
               break;
             }
             case "update_form_info": {

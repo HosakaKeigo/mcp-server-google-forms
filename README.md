@@ -90,9 +90,6 @@ You may restart Claude Desktop to apply the changes.
 ### Available Tools
 
 - `get_form`: Get the structure of a Google Form
-- `add_text_item`: Add a text item (title and description only) to a form
-- `add_question_item`: Add a question item (text input, multiple choice, etc.) to a form
-- `move_item`: Move an item to a different position within the form
 - `update_form_info`: Update the form's basic information (title and description)
 - `delete_item`: Delete an item from the form
 - `add_page_break_item`: Add a page break to a form

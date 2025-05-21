@@ -2,7 +2,6 @@ import type { forms_v1 } from "@googleapis/forms";
 import type {
   CreateItemRequestParams,
   DeleteItemRequestParams,
-  FormOption,
   MoveItemRequestParams,
   UpdateFormInfoRequestParams,
   UpdateItemRequestParams,
@@ -26,12 +25,17 @@ export function buildCreateItemRequest(
       title: params.title,
     };
 
+    // Optional item ID for branching logic
+    if (params.item_id) {
+      item.itemId = params.item_id;
+    }
+
     if (params.description) {
       item.description = params.description;
     }
 
     // Set data based on item type
-    switch (params.itemType) {
+    switch (params.item_type) {
       case "text":
         item.textItem = {};
         break;
@@ -41,7 +45,7 @@ export function buildCreateItemRequest(
         break;
 
       case "question": {
-        if (!params.questionType) {
+        if (!params.question_type) {
           throw new Error("questionType is required when creating a question item");
         }
 
@@ -51,10 +55,10 @@ export function buildCreateItemRequest(
           },
         };
 
-        if (params.questionType === "TEXT" || params.questionType === "PARAGRAPH_TEXT") {
+        if (params.question_type === "TEXT" || params.question_type === "PARAGRAPH_TEXT") {
           if (item.questionItem?.question) {
             item.questionItem.question.textQuestion = {
-              paragraph: params.questionType === "PARAGRAPH_TEXT",
+              paragraph: params.question_type === "PARAGRAPH_TEXT",
             };
           }
         } else {
@@ -81,15 +85,15 @@ export function buildCreateItemRequest(
 
           // Add "Other" option
           if (
-            params.includeOther &&
-            (params.questionType === "RADIO" || params.questionType === "CHECKBOX")
+            params.include_other &&
+            (params.question_type === "RADIO" || params.question_type === "CHECKBOX")
           ) {
             optionsArray.push({ isOther: true });
           }
 
           if (item.questionItem?.question) {
             item.questionItem.question.choiceQuestion = {
-              type: params.questionType,
+              type: params.question_type,
               options: optionsArray,
             };
           }
@@ -130,7 +134,7 @@ export function buildCreateItemRequest(
       }
 
       default:
-        throw new Error(`Unknown item type: ${params.itemType}`);
+        throw new Error(`Unknown item type: ${params.item_type}`);
     }
 
     return {
@@ -157,19 +161,19 @@ export function buildUpdateItemRequest(
       throw new Error("item is required for updating an item");
     }
 
-    if (!params.location) {
-      throw new Error("location is required for updating an item");
+    if (params.index === undefined) {
+      throw new Error("index is required for updating an item");
     }
 
-    if (!params.updateMask) {
+    if (!params.update_mask) {
       throw new Error("updateMask is required for updating an item");
     }
 
     return {
       updateItem: {
         item: params.item,
-        location: params.location,
-        updateMask: params.updateMask,
+        location: { index: params.index },
+        updateMask: params.update_mask,
       },
     };
   } catch (error) {
@@ -199,7 +203,7 @@ export function buildMoveItemRequest(params: MoveItemRequestParams): forms_v1.Sc
   return {
     moveItem: {
       originalLocation: { index: params.index },
-      newLocation: { index: params.newIndex },
+      newLocation: { index: params.new_index },
     },
   };
 }
