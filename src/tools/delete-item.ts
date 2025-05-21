@@ -5,66 +5,66 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォームの項目を削除するMCPツール
+ * MCP tool to delete form items
  */
 export class DeleteItemTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "delete_item";
 
   /**
-   * ツールの説明
+   * Tool description
    */
-  readonly description = "Google Formsの項目を削除します。";
+  readonly description = "Deletes items from Google Forms.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameters definition
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
-    index: z.number().int().min(0).describe("削除する項目のインデックス（0から始まる）"),
+    index: z.number().int().min(0).describe("Index of the item to delete (0-based)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Tool execution
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // サービスのインスタンス化
+      // Initialize the service
       const service = new GFormService();
 
-      // フォーム情報取得（インデックスの確認のため）
+      // Get form information (to verify index)
       const form = await service.getForm(formId);
 
-      // インデックスの範囲確認
+      // Validate index range
       if (args.index < 0 || !form.items || args.index >= form.items.length) {
         throw new Error(
-          `インデックス ${args.index} が範囲外です。フォームには ${form.items ? form.items.length : 0} 個の項目があります。`,
+          `Index ${args.index} is out of range. The form has ${form.items ? form.items.length : 0} items.`,
         );
       }
 
-      // 削除する項目の情報を取得
+      // Get information about the item to be deleted
       const itemToDelete = form.items[args.index];
 
-      // 項目を削除
+      // Delete the item
       const result = await service.deleteItem(formId, args.index);
 
       return {
         content: [
           {
             type: "text",
-            text: `インデックス ${args.index} の項目「${itemToDelete.title || "無題"}」を削除しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
+            text: `Deleted item "${itemToDelete.title || "Untitled"}" at index ${args.index}.\n\nUpdated form information:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
@@ -73,7 +73,7 @@ export class DeleteItemTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,

@@ -5,75 +5,75 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォームの項目を移動するMCPツール
+ * MCP tool to move form items
  */
 export class MoveItemTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "move_item";
 
   /**
-   * ツールの説明
+   * Tool description
    */
-  readonly description = "Google Forms内の項目を別の位置に移動します。";
+  readonly description = "Moves items to different positions within Google Forms.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameters definition
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
     original_index: z
       .number()
       .int()
       .min(0)
-      .describe("移動する項目の現在のインデックス（0から始まる）"),
-    new_index: z.number().int().min(0).describe("移動先のインデックス（0から始まる）"),
+      .describe("Current index of the item to move (0-based)"),
+    new_index: z.number().int().min(0).describe("Destination index where to move the item (0-based)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Tool execution
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // インデックスが範囲内かチェック（厳密なチェックはAPI側で行われる）
+      // Check if indices are within range (strict check is done on API side)
       if (args.original_index < 0 || args.new_index < 0) {
-        throw new Error("インデックスは0以上の値である必要があります");
+        throw new Error("Indices must be 0 or greater");
       }
 
-      // 同じ位置への移動をチェック
+      // Check for move to the same position
       if (args.original_index === args.new_index) {
         return {
           content: [
             {
               type: "text",
-              text: `項目はすでにインデックス ${args.original_index} の位置にあります。移動は不要です。`,
+              text: `Item is already at index ${args.original_index}. No move needed.`,
             },
           ],
         };
       }
 
-      // サービスのインスタンス化
+      // Initialize the service
       const service = new GFormService();
 
-      // 項目を移動
+      // Move the item
       const result = await service.moveItem(formId, args.original_index, args.new_index);
 
       return {
         content: [
           {
             type: "text",
-            text: `項目をインデックス ${args.original_index} から ${args.new_index} に移動しました。\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
+            text: `Item moved from index ${args.original_index} to ${args.new_index}.\n\nUpdated form information:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
@@ -82,7 +82,7 @@ export class MoveItemTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,

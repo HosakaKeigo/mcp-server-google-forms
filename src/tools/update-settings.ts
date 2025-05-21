@@ -5,57 +5,57 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォーム設定を更新するMCPツール
+ * MCP tool to update form settings
  */
 export class UpdateSettingsTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "update_settings";
 
   /**
-   * ツールの説明
+   * Tool description
    */
   readonly description =
-    "Google Formsの設定を更新します。メール収集設定やクイズ設定などを変更できます。";
+    "Updates Google Forms settings. You can change email collection settings, quiz settings, etc.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameters definition
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
     email_collection_type: z
       .enum(["DO_NOT_COLLECT", "VERIFIED", "RESPONDER_INPUT"])
       .optional()
       .describe(
-        "メール収集タイプ（DO_NOT_COLLECT:収集しない, VERIFIED:認証済みメール, RESPONDER_INPUT:回答者が入力したメール）",
+        "Email collection type (DO_NOT_COLLECT: do not collect, VERIFIED: verified email, RESPONDER_INPUT: email input by respondent)",
       ),
-    is_quiz: z.boolean().optional().describe("クイズ形式かどうか"),
+    is_quiz: z.boolean().optional().describe("Whether it's in quiz format"),
     release_grade: z
       .enum(["NONE", "IMMEDIATELY", "LATER"])
       .optional()
-      .describe("成績の公開方法（NONE:公開しない, IMMEDIATELY:即時, LATER:後で）"),
+      .describe("Grade release method (NONE: do not publish, IMMEDIATELY: immediate, LATER: later)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Tool execution
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // サービスのインスタンス化
+      // Initialize the service
       const service = new GFormService();
 
-      // 設定オブジェクトとupdate_maskの作成
+      // Create settings object and update_mask
       const settings: {
         emailCollectionType?: string;
         quizSettings?: {
@@ -66,13 +66,13 @@ export class UpdateSettingsTool {
 
       const updateMaskParts: string[] = [];
 
-      // メール収集設定
+      // Email collection settings
       if (args.email_collection_type !== undefined) {
         settings.emailCollectionType = args.email_collection_type;
         updateMaskParts.push("emailCollectionType");
       }
 
-      // クイズ設定の処理
+      // Quiz settings processing
       if (args.is_quiz !== undefined || args.release_grade !== undefined) {
         settings.quizSettings = {};
 
@@ -87,41 +87,41 @@ export class UpdateSettingsTool {
         }
       }
 
-      // 更新すべき項目がない場合はエラー
+      // Error if no items to update
       if (updateMaskParts.length === 0) {
-        throw new Error("更新すべき設定項目を少なくとも1つ指定してください");
+        throw new Error("Please specify at least one setting item to update");
       }
 
-      // 設定を更新
+      // Update settings
       const result = await service.updateSettings(formId, settings, updateMaskParts.join(","));
 
-      // 設定変更内容の説明文を生成
+      // Generate description of settings changes
       const changes: string[] = [];
 
       if (settings.emailCollectionType) {
         const emailCollectionTypeMap = {
-          EMAIL_COLLECTION_TYPE_UNSPECIFIED: "未指定",
-          DO_NOT_COLLECT: "収集しない",
-          VERIFIED: "認証済みメール",
-          RESPONDER_INPUT: "回答者が入力したメール",
+          EMAIL_COLLECTION_TYPE_UNSPECIFIED: "Unspecified",
+          DO_NOT_COLLECT: "Do not collect",
+          VERIFIED: "Verified email",
+          RESPONDER_INPUT: "Email input by respondent",
         };
         changes.push(
-          `メール収集: ${emailCollectionTypeMap[settings.emailCollectionType as keyof typeof emailCollectionTypeMap]}`,
+          `Email collection: ${emailCollectionTypeMap[settings.emailCollectionType as keyof typeof emailCollectionTypeMap]}`,
         );
       }
 
       if (settings.quizSettings?.isQuiz !== undefined) {
-        changes.push(`クイズ形式: ${settings.quizSettings.isQuiz ? "有効" : "無効"}`);
+        changes.push(`Quiz format: ${settings.quizSettings.isQuiz ? "Enabled" : "Disabled"}`);
       }
 
       if (settings.quizSettings?.releaseGrade) {
         const releaseGradeMap = {
-          NONE: "公開しない",
-          IMMEDIATELY: "即時公開",
-          LATER: "後で公開",
+          NONE: "Do not publish",
+          IMMEDIATELY: "Immediate",
+          LATER: "Later",
         };
         changes.push(
-          `成績公開: ${releaseGradeMap[settings.quizSettings.releaseGrade as keyof typeof releaseGradeMap]}`,
+          `Grade release: ${releaseGradeMap[settings.quizSettings.releaseGrade as keyof typeof releaseGradeMap]}`,
         );
       }
 
@@ -129,7 +129,7 @@ export class UpdateSettingsTool {
         content: [
           {
             type: "text",
-            text: `フォーム設定を更新しました。\n変更内容: ${changes.join(", ")}\n\n変更後のフォーム情報:\n${JSON.stringify(result.form, null, 2)}`,
+            text: `Form settings updated.\nChanges: ${changes.join(", ")}\n\nUpdated form information:\n${JSON.stringify(result.form, null, 2)}`,
           },
         ],
       };
@@ -138,7 +138,7 @@ export class UpdateSettingsTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,
