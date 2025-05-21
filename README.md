@@ -4,6 +4,8 @@ This is a Model Context Protocol (MCP) server for Google Forms that allows you t
 
 ![google-forms-mcp-demo](https://github.com/user-attachments/assets/7a62025f-3f02-4471-aed8-6d4a5e1edf86)
 
+>[!Tip]
+> You can also create Quiz!
 
 ## Prerequisites
 
