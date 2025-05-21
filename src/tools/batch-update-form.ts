@@ -1,6 +1,6 @@
 import type { forms_v1 } from "@googleapis/forms";
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
-import { SUPPORTED_OPERATIONS, type InferZodParams } from "../types/index.js";
+import { type BatchUpdateOperation, SUPPORTED_OPERATIONS, type InferZodParams } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 import {
@@ -8,10 +8,10 @@ import {
   buildDeleteItemRequest,
   buildMoveItemRequest,
   buildUpdateFormInfoRequest,
+  buildUpdateFormSettingsRequest,
   buildUpdateItemRequest,
 } from "../utils/request-builders.js";
 import { BatchUpdateFormSchema } from "../types/schemas.js";
-import type { BatchUpdateOperation } from "../types/request-types.js";
 
 /**
  * MCP tool to batch update multiple items in a form
@@ -69,22 +69,7 @@ export class BatchUpdateFormTool {
               if (!op.createItemRequest) {
                 throw new Error(`Operation #${opIndex + 1}: createItemRequest is required when creating an item`);
               }
-              request = buildCreateItemRequest({
-                item_id: op.createItemRequest.item_id,
-                title: op.createItemRequest.title,
-                description: op.createItemRequest.description,
-                index: op.createItemRequest.index,
-                item_type: op.createItemRequest.item_type,
-                question_type: op.createItemRequest.question_type,
-                options: op.createItemRequest.options,
-                required: op.createItemRequest.required,
-                include_other: op.createItemRequest.include_other,
-                rows: op.createItemRequest.rows,
-                isGrid: op.createItemRequest.isGrid,
-                columns: op.createItemRequest.columns,
-                gridType: op.createItemRequest.gridType,
-                shuffleQuestions: op.createItemRequest.shuffleQuestions,
-              });
+              request = buildCreateItemRequest(op.createItemRequest);
               break;
             }
             case "update_item": {
@@ -108,11 +93,7 @@ export class BatchUpdateFormTool {
                   throw new Error(`Operation #${opIndex + 1}: 'update_mask' is required in updateItemRequest`);
                 }
 
-                request = buildUpdateItemRequest({
-                  item: op.updateItemRequest.item,
-                  index: itemIndex,
-                  update_mask: op.updateItemRequest.update_mask,
-                });
+                request = buildUpdateItemRequest(op.updateItemRequest);
               } else {
                 // 従来の形式はサポートしなくなったので、エラーを返す
                 throw new Error(`Operation #${opIndex + 1}: updateItemRequest is required for update_item operations`);
@@ -127,7 +108,7 @@ export class BatchUpdateFormTool {
               if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
                 throw new Error(`Operation #${opIndex + 1}: Index ${itemIndex} is out of range`);
               }
-              request = buildDeleteItemRequest({ index: itemIndex });
+              request = buildDeleteItemRequest(op.deleteItemRequest);
               break;
             }
             case "move_item": {
@@ -143,17 +124,21 @@ export class BatchUpdateFormTool {
               if (newIndex < 0 || newIndex > form.items.length) {
                 throw new Error(`Operation #${opIndex + 1}: New index ${newIndex} is out of range`);
               }
-              request = buildMoveItemRequest({ index: itemIndex, new_index: newIndex });
+              request = buildMoveItemRequest(op.moveItemRequest);
               break;
             }
             case "update_form_info": {
               if (!op.updateFormInfoRequest) {
                 throw new Error(`Operation #${opIndex + 1}: updateFormInfoRequest is required when updating form info`);
               }
-              request = buildUpdateFormInfoRequest({
-                title: op.updateFormInfoRequest.title,
-                description: op.updateFormInfoRequest.description,
-              });
+              request = buildUpdateFormInfoRequest(op.updateFormInfoRequest);
+              break;
+            }
+            case "update_form_settings": {
+              if (!op.updateFormSettingsRequest) {
+                throw new Error(`Operation #${opIndex + 1}: updateFormSettingsRequest is required when updating form settings`);
+              }
+              request = buildUpdateFormSettingsRequest(op.updateFormSettingsRequest);
               break;
             }
             default:

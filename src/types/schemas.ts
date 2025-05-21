@@ -61,7 +61,6 @@ export const QuestionGroupRowSchema = z.object({
  * Schema for create item request in batch operations
  */
 export const CreateItemRequestSchema = z.object({
-  item_id: z.string().optional().describe("Item ID (optional). Useful for section logic branching)"),
   title: z.string().describe("Item title"),
   description: z.string().optional().describe("Item description"),
   index: z.number().optional().describe("Insertion position (appends to the end if omitted)"),
@@ -111,6 +110,20 @@ export const UpdateFormInfoRequestSchema = z.object({
 }).describe("Request object for updating form information");
 
 /**
+ * Schema for update form settings request in batch operations
+ */
+export const UpdateFormSettingsRequestSchema = z.object({
+  email_collection_type: z
+    .enum(["DO_NOT_COLLECT", "VERIFIED", "RESPONDER_INPUT"])
+    .optional()
+    .describe(
+      "Email collection type (DO_NOT_COLLECT: do not collect, VERIFIED: verified email, RESPONDER_INPUT: email input by respondent). Setting this to RESPONDER_INPUT automatically add a question to the form asking for the email address. Make sure not to have two email address questions in the form.",
+    ),
+  is_quiz: z.boolean().optional().describe("Whether it's in quiz format"),
+  release_grade: z.enum(["NONE", "IMMEDIATELY", "LATER"]).optional().describe("Grade release method")
+}).describe("Request object for updating form settings");
+
+/**
  * Schema for a single batch operation
  */
 export const BatchOperationSchema = z.object({
@@ -121,6 +134,7 @@ export const BatchOperationSchema = z.object({
   deleteItemRequest: DeleteItemRequestSchema.optional(),
   moveItemRequest: MoveItemRequestSchema.optional(),
   updateFormInfoRequest: UpdateFormInfoRequestSchema.optional(),
+  updateFormSettingsRequest: UpdateFormSettingsRequestSchema.optional(),
 });
 
 /**

@@ -5,7 +5,7 @@ import type {
   DeleteItemRequestSchema,
   MoveItemRequestSchema,
   UpdateFormInfoRequestSchema,
-  BatchOperationSchema
+  UpdateFormSettingsRequestSchema
 } from "./schemas.js";
 
 // Parameter type definitions for Google Forms requests
@@ -14,5 +14,4 @@ export type UpdateItemRequestParams = z.infer<typeof UpdateItemRequestSchema>;
 export type DeleteItemRequestParams = z.infer<typeof DeleteItemRequestSchema>;
 export type MoveItemRequestParams = z.infer<typeof MoveItemRequestSchema>;
 export type UpdateFormInfoRequestParams = z.infer<typeof UpdateFormInfoRequestSchema>;
-
-export type BatchUpdateOperation = z.infer<typeof BatchOperationSchema> 
+export type UpdateFormSettingsRequestParams = z.infer<typeof UpdateFormSettingsRequestSchema>;

@@ -4,6 +4,7 @@ import type {
   DeleteItemRequestParams,
   MoveItemRequestParams,
   UpdateFormInfoRequestParams,
+  UpdateFormSettingsRequestParams,
   UpdateItemRequestParams,
 } from "../types/request-types.js";
 
@@ -24,11 +25,6 @@ export function buildCreateItemRequest(
     const item: forms_v1.Schema$Item = {
       title: params.title,
     };
-
-    // Optional item ID for branching logic
-    if (params.item_id) {
-      item.itemId = params.item_id;
-    }
 
     if (params.description) {
       item.description = params.description;
@@ -238,6 +234,59 @@ export function buildUpdateFormInfoRequest(
     return {
       updateFormInfo: {
         info,
+        updateMask: updateMaskParts.join(","),
+      },
+    };
+  } catch (error) {
+    return error as Error;
+  }
+}
+
+/**
+ * Request builder: Generate update form settings request
+ * @param params Parameters
+ * @returns Update request object
+ */
+export function buildUpdateFormSettingsRequest(
+  params: UpdateFormSettingsRequestParams,
+): forms_v1.Schema$Request | Error {
+  try {
+    const settings: {
+      emailCollectionType?: string;
+      quizSettings?: {
+        isQuiz?: boolean;
+        releaseGrade?: string;
+      };
+    } = {};
+    const updateMaskParts: string[] = [];
+
+    if (params.email_collection_type !== undefined) {
+      settings.emailCollectionType = params.email_collection_type;
+      updateMaskParts.push("emailCollectionType");
+    }
+
+    if (params.is_quiz !== undefined || params.release_grade !== undefined) {
+      settings.quizSettings = {};
+
+      if (params.is_quiz !== undefined) {
+        settings.quizSettings.isQuiz = params.is_quiz;
+        updateMaskParts.push("quizSettings.isQuiz");
+      }
+
+      if (params.release_grade !== undefined) {
+        settings.quizSettings.releaseGrade = params.release_grade;
+        updateMaskParts.push("quizSettings.releaseGrade");
+      }
+    }
+
+    // Error if no fields to update
+    if (updateMaskParts.length === 0) {
+      throw new Error("No form settings specified to update");
+    }
+
+    return {
+      updateSettings: {
+        settings,
         updateMask: updateMaskParts.join(","),
       },
     };

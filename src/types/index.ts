@@ -1,6 +1,6 @@
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import type { z } from "zod";
-import type { FormOptionSchema, GoToActionSchema, ItemTypeSchema, QuestionTypeSchema } from "./schemas.js";
+import type { BatchOperationSchema, FormOptionSchema, GoToActionSchema, ItemTypeSchema, QuestionTypeSchema } from "./schemas.js";
 
 /**
  * Utility type to infer parameter types from Zod schema
@@ -47,7 +47,9 @@ export const SUPPORTED_OPERATIONS = [
   "update_item",
   "delete_item",
   "move_item",
-  "update_form_info"
+  "update_form_info",
+  "update_form_settings",
 ] as const;
 
 export type FormOption = z.infer<typeof FormOptionSchema>
+export type BatchUpdateOperation = z.infer<typeof BatchOperationSchema>
