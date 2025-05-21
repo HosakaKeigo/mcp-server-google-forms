@@ -45,17 +45,5 @@ export interface IMCPTool<TParams extends Record<string, z.ZodType> = Record<str
   }>;
 }
 
-/**
- * Supported operations for batch updates
- */
-export const SUPPORTED_OPERATIONS = [
-  "create_item",
-  "update_item",
-  "delete_item",
-  "move_item",
-  "update_form_info",
-  "update_form_settings",
-] as const;
-
 export type FormOption = z.infer<typeof FormOptionSchema>;
 export type BatchUpdateOperation = z.infer<typeof BatchOperationSchema>;

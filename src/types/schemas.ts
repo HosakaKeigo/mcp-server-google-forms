@@ -1,10 +1,4 @@
 import { z } from "zod";
-import { SUPPORTED_OPERATIONS } from "./index.js";
-
-/**
- * Form ID schema definition
- */
-export const FormIdSchema = z.string().min(1);
 
 /**
  * Form URL schema definition
@@ -44,9 +38,21 @@ export const FormOptionSchema = z
     goToSectionId: z
       .string()
       .optional()
-      .describe("Section ID to navigate to when this option is selected"),
+      .describe("Section ID to navigate to when this option is selected. You can first create a section and then use the section ID here."),
   })
   .describe("Form option with optional branching capability");
+
+/**
+* Supported operations for batch updates
+*/
+export const SUPPORTED_OPERATIONS = [
+  "create_item",
+  "update_item",
+  "delete_item",
+  "move_item",
+  "update_form_info",
+  "update_form_settings",
+] as const;
 
 /**
  * Operation type schema
