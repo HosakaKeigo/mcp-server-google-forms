@@ -22,7 +22,7 @@ This is a Model Context Protocol (MCP) server for Google Forms that allows you t
       - Log in with your user credentials. By default, `gcloud auth application-default login` requests the following scopes: `openid`, `https://www.googleapis.com/auth/userinfo.email`, `https://www.googleapis.com/auth/cloud-platform`, and `https://www.googleapis.com/auth/sqlservice.login`.
       - For this project, you **must** explicitly provide the necessary scopes for accessing Google Forms and Google Drive by using the `--scopes` flag. These will be requested in addition to the defaults (or will replace them if the gcloud version behavior is to override). The required scopes are:
         ```bash
-        gcloud auth application-default login --scopes=https://www.googleapis.com/auth/forms.body,https://www.googleapis.com/auth/forms.responses.readonly,https://www.googleapis.com/auth/drive.file,openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform
+        gcloud auth application-default login --scopes=https://www.googleapis.com/auth/forms,https://www.googleapis.com/auth/drive,openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform
         ```
         The `drive.file` scope is necessary for creating new forms, as they are stored in Google Drive. The `openid` and `userinfo.email` scopes are commonly included for user authentication context, and `cloud-platform` provides broad access to GCP services which might be useful if the ADC is used for other gcloud operations.
       - This command will open a browser window for you to authenticate. Once done, your ADC will be configured.
