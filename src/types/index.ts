@@ -45,5 +45,32 @@ export interface IMCPTool<TParams extends Record<string, z.ZodType> = Record<str
   }>;
 }
 
+/**
+ * Interface for MCP prompts
+ */
+export interface IMCPPrompt<
+  TParams extends Record<string, z.ZodType> = Record<string, z.ZodType>,
+> {
+  /**
+   * Prompt name
+   */
+  readonly name: string;
+
+  /**
+   * Parameter definitions
+   */
+  readonly schema: TParams;
+
+  /**
+   * Prompt handler
+   */
+  handler(args: InferZodParams<TParams>): {
+    messages: {
+      role: "user" | "assistant";
+      content: TextContent;
+    }[];
+  };
+}
+
 export type FormOption = z.infer<typeof FormOptionSchema>;
 export type BatchUpdateOperation = z.infer<typeof BatchOperationSchema>;

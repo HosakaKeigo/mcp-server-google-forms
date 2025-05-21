@@ -1,15 +1,13 @@
-//import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-//import { EditFormPromptArgs, generateEditFormPrompt } from "./edit-form.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { CreateQuizPrompt } from "./create-quiz.js";
+import type { IMCPPrompt } from "../types/index.js";
 
-///**
-// * すべてのプロンプトをサーバーに登録する
-// * @param server MCPサーバーインスタンス
-// */
-//export function registerPrompts(server: McpServer): void {
-//  server.prompt(
-//    "edit_form",
-//    "Google Formsの編集をサポートするプロンプト",
-//    EditFormPromptArgs,
-//    generateEditFormPrompt
-//  );
-//}
+export function registerPrompts(server: McpServer): void {
+  const Prompts: IMCPPrompt[] = [
+    new CreateQuizPrompt()
+  ]
+
+  for (const prompt of Prompts) {
+    server.prompt(prompt.name, prompt.handler.bind(prompt));
+  }
+}

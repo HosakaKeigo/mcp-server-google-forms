@@ -5,6 +5,7 @@ import { registerTools } from "./tools/index.js";
 //import { registerPrompts } from "./prompts/index.js";
 //import { registerResources } from "./resources/index.js";
 import { checkEnvironmentVariables } from "./utils/env.js";
+import { registerPrompts } from "./prompts/index.js";
 
 /**
  * Main function for the MCP server
@@ -31,7 +32,7 @@ async function main() {
 
   // Register tools, prompts, and resources
   registerTools(server);
-  //registerPrompts(server);
+  registerPrompts(server);
   //registerResources(server);
 
   // Set up stdio communication
