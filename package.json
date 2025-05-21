@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node build/index.js",
     "dev": "tsc && node build/index.js",
+    "test": "vitest",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
     "check": "biome check ./src",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/node": "^20.8.2",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^3.1.4"
   }
 }
