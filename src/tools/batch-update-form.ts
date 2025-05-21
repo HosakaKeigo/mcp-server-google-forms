@@ -1,6 +1,11 @@
 import type { forms_v1 } from "@googleapis/forms";
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
-import { type BatchUpdateOperation, SUPPORTED_OPERATIONS, type InferZodParams } from "../types/index.js";
+import {
+  type BatchUpdateOperation,
+  type InferZodParams,
+  SUPPORTED_OPERATIONS,
+} from "../types/index.js";
+import { BatchUpdateFormSchema } from "../types/schemas.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 import {
@@ -11,7 +16,6 @@ import {
   buildUpdateFormSettingsRequest,
   buildUpdateItemRequest,
 } from "../utils/request-builders.js";
-import { BatchUpdateFormSchema } from "../types/schemas.js";
 
 /**
  * MCP tool to batch update multiple items in a form
@@ -67,7 +71,9 @@ export class BatchUpdateFormTool {
           switch (op.operation) {
             case "create_item": {
               if (!op.createItemRequest) {
-                throw new Error(`Operation #${opIndex + 1}: createItemRequest is required when creating an item`);
+                throw new Error(
+                  `Operation #${opIndex + 1}: createItemRequest is required when creating an item`,
+                );
               }
               request = buildCreateItemRequest(op.createItemRequest);
               break;
@@ -78,7 +84,9 @@ export class BatchUpdateFormTool {
                 const itemIndex = op.updateItemRequest.index;
 
                 if (itemIndex === undefined) {
-                  throw new Error(`Operation #${opIndex + 1}: index is required when updating an item`);
+                  throw new Error(
+                    `Operation #${opIndex + 1}: index is required when updating an item`,
+                  );
                 }
 
                 if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
@@ -86,23 +94,31 @@ export class BatchUpdateFormTool {
                 }
 
                 if (!op.updateItemRequest.item) {
-                  throw new Error(`Operation #${opIndex + 1}: 'item' is required in updateItemRequest`);
+                  throw new Error(
+                    `Operation #${opIndex + 1}: 'item' is required in updateItemRequest`,
+                  );
                 }
 
                 if (!op.updateItemRequest.update_mask) {
-                  throw new Error(`Operation #${opIndex + 1}: 'update_mask' is required in updateItemRequest`);
+                  throw new Error(
+                    `Operation #${opIndex + 1}: 'update_mask' is required in updateItemRequest`,
+                  );
                 }
 
                 request = buildUpdateItemRequest(op.updateItemRequest);
               } else {
                 // 従来の形式はサポートしなくなったので、エラーを返す
-                throw new Error(`Operation #${opIndex + 1}: updateItemRequest is required for update_item operations`);
+                throw new Error(
+                  `Operation #${opIndex + 1}: updateItemRequest is required for update_item operations`,
+                );
               }
               break;
             }
             case "delete_item": {
               if (!op.deleteItemRequest) {
-                throw new Error(`Operation #${opIndex + 1}: deleteItemRequest is required when deleting an item`);
+                throw new Error(
+                  `Operation #${opIndex + 1}: deleteItemRequest is required when deleting an item`,
+                );
               }
               const itemIndex = op.deleteItemRequest.index;
               if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
@@ -113,7 +129,9 @@ export class BatchUpdateFormTool {
             }
             case "move_item": {
               if (!op.moveItemRequest) {
-                throw new Error(`Operation #${opIndex + 1}: moveItemRequest is required when moving an item`);
+                throw new Error(
+                  `Operation #${opIndex + 1}: moveItemRequest is required when moving an item`,
+                );
               }
               const itemIndex = op.moveItemRequest.index;
               const newIndex = op.moveItemRequest.new_index;
@@ -129,14 +147,18 @@ export class BatchUpdateFormTool {
             }
             case "update_form_info": {
               if (!op.updateFormInfoRequest) {
-                throw new Error(`Operation #${opIndex + 1}: updateFormInfoRequest is required when updating form info`);
+                throw new Error(
+                  `Operation #${opIndex + 1}: updateFormInfoRequest is required when updating form info`,
+                );
               }
               request = buildUpdateFormInfoRequest(op.updateFormInfoRequest);
               break;
             }
             case "update_form_settings": {
               if (!op.updateFormSettingsRequest) {
-                throw new Error(`Operation #${opIndex + 1}: updateFormSettingsRequest is required when updating form settings`);
+                throw new Error(
+                  `Operation #${opIndex + 1}: updateFormSettingsRequest is required when updating form settings`,
+                );
               }
               request = buildUpdateFormSettingsRequest(op.updateFormSettingsRequest);
               break;
@@ -204,18 +226,20 @@ ${JSON.stringify(result.form, null, 2)}`,
           throw new Error("createItemRequest is required");
         }
         const req = op.createItemRequest;
-        return `Create item: type=${req.item_type}, title="${req.title}"${req.index !== undefined ? `, position=${req.index}` : ""
-          }${req.options
+        return `Create item: type=${req.item_type}, title="${req.title}"${
+          req.index !== undefined ? `, position=${req.index}` : ""
+        }${
+          req.options
             ? `, options=[${req.options
-              .map((o) => {
-                let desc = `"${o.value}"`;
-                if (o.goToAction) desc += ` (→${o.goToAction})`;
-                else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
-                return desc;
-              })
-              .join(", ")}]`
+                .map((o) => {
+                  let desc = `"${o.value}"`;
+                  if (o.goToAction) desc += ` (→${o.goToAction})`;
+                  else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
+                  return desc;
+                })
+                .join(", ")}]`
             : ""
-          }`;
+        }`;
       }
 
       case "update_item": {

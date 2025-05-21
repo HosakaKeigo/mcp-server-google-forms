@@ -9,11 +9,7 @@ import { GetFormTool } from "./get-form.js";
  * @param server MCP server instance
  */
 export function registerTools(server: McpServer): void {
-  const tools: IMCPTool[] = [
-    new GetFormTool(),
-    new CreateFormTool(),
-    new BatchUpdateFormTool(),
-  ];
+  const tools: IMCPTool[] = [new GetFormTool(), new CreateFormTool(), new BatchUpdateFormTool()];
 
   for (const tool of tools) {
     server.tool(tool.name, tool.description, tool.parameters, tool.execute.bind(tool));

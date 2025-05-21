@@ -122,7 +122,7 @@ export function buildCreateItemRequest(
             shuffleQuestions: params.shuffleQuestions ?? false,
             columns: {
               type: params.gridType,
-              options: params.columns ? params.columns.map(col => ({ value: col.value })) : [],
+              options: params.columns ? params.columns.map((col) => ({ value: col.value })) : [],
             },
           };
         }

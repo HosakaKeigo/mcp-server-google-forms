@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { buildDeleteItemRequest } from './request-builders.js';
-import type { DeleteItemRequestParams } from '../types/request-types.js';
+import { describe, expect, it } from "vitest";
+import type { DeleteItemRequestParams } from "../types/request-types.js";
+import { buildDeleteItemRequest } from "./request-builders.js";
 
-describe('buildDeleteItemRequest', () => {
-  it('should correctly construct the deleteItem request object for a given index', () => {
+describe("buildDeleteItemRequest", () => {
+  it("should correctly construct the deleteItem request object for a given index", () => {
     const params: DeleteItemRequestParams = { index: 2 };
     const expectedRequest = {
       deleteItem: {
@@ -15,7 +15,7 @@ describe('buildDeleteItemRequest', () => {
     expect(buildDeleteItemRequest(params)).toEqual(expectedRequest);
   });
 
-  it('should correctly construct the deleteItem request object for index 0', () => {
+  it("should correctly construct the deleteItem request object for index 0", () => {
     const params: DeleteItemRequestParams = { index: 0 };
     const expectedRequest = {
       deleteItem: {
