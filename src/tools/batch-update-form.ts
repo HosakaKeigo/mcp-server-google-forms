@@ -1,9 +1,6 @@
 import type { forms_v1 } from "@googleapis/forms";
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
-import type {
-  BatchUpdateOperation,
-  InferZodParams,
-} from "../types/index.js";
+import type { BatchUpdateOperation, InferZodParams } from "../types/index.js";
 import { BatchUpdateFormSchema, SUPPORTED_OPERATIONS } from "../types/schemas.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
@@ -228,24 +225,26 @@ ${JSON.stringify(result.form, null, 2)}`,
           throw new Error("createItemRequest is required");
         }
         const req = op.createItemRequest;
-        let description = `Create item: type=${req.item_type}, title="${req.title}"${req.index !== undefined ? `, position=${req.index}` : ""
-          }${req.options
+        let description = `Create item: type=${req.item_type}, title="${req.title}"${
+          req.index !== undefined ? `, position=${req.index}` : ""
+        }${
+          req.options
             ? `, options=[${req.options
-              .map((o) => {
-                let desc = `"${o.value}"`;
-                if (o.goToAction) desc += ` (→${o.goToAction})`;
-                else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
-                return desc;
-              })
-              .join(", ")}]`
+                .map((o) => {
+                  let desc = `"${o.value}"`;
+                  if (o.goToAction) desc += ` (→${o.goToAction})`;
+                  else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
+                  return desc;
+                })
+                .join(", ")}]`
             : ""
-          }`;
+        }`;
 
         // Add grading information to description if present
         if (req.grading) {
           description += `, points=${req.grading.pointValue}`;
           if (req.grading.correctAnswers) {
-            description += `, correct answers=[${req.grading.correctAnswers.answers.map(a => `"${a.value}"`).join(", ")}]`;
+            description += `, correct answers=[${req.grading.correctAnswers.answers.map((a) => `"${a.value}"`).join(", ")}]`;
           }
         }
 

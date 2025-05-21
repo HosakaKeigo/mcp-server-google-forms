@@ -72,7 +72,8 @@ export function buildCreateItemRequest(
               };
 
               if (params.grading.whenRight.material) {
-                item.questionItem.question.grading.whenRight.material = params.grading.whenRight.material;
+                item.questionItem.question.grading.whenRight.material =
+                  params.grading.whenRight.material;
               }
             }
 
@@ -83,7 +84,8 @@ export function buildCreateItemRequest(
               };
 
               if (params.grading.whenWrong.material) {
-                item.questionItem.question.grading.whenWrong.material = params.grading.whenWrong.material;
+                item.questionItem.question.grading.whenWrong.material =
+                  params.grading.whenWrong.material;
               }
             }
 
@@ -94,7 +96,8 @@ export function buildCreateItemRequest(
               };
 
               if (params.grading.generalFeedback.material) {
-                item.questionItem.question.grading.generalFeedback.material = params.grading.generalFeedback.material;
+                item.questionItem.question.grading.generalFeedback.material =
+                  params.grading.generalFeedback.material;
               }
             }
           }
@@ -151,15 +154,20 @@ export function buildCreateItemRequest(
           throw new Error("Question group requires at least one row (question)");
         }
         item.questionGroupItem = {
-          questions: params.question_group_params.rows.map((row: { title: string; required?: boolean }) => ({
-            required: row.required ?? false,
-            rowQuestion: {
-              title: row.title,
-            },
-          })),
+          questions: params.question_group_params.rows.map(
+            (row: { title: string; required?: boolean }) => ({
+              required: row.required ?? false,
+              rowQuestion: {
+                title: row.title,
+              },
+            }),
+          ),
         };
         if (params.question_group_params.is_grid) {
-          if (!params.question_group_params.columns || params.question_group_params.columns.length === 0) {
+          if (
+            !params.question_group_params.columns ||
+            params.question_group_params.columns.length === 0
+          ) {
             throw new Error("Grid-style question group requires columns (options)");
           }
           if (!params.question_group_params.grid_type) {
@@ -171,7 +179,9 @@ export function buildCreateItemRequest(
             shuffleQuestions: params.question_group_params.shuffle_questions ?? false,
             columns: {
               type: params.question_group_params.grid_type,
-              options: params.question_group_params.columns ? params.question_group_params.columns.map((col) => ({ value: col.value })) : [],
+              options: params.question_group_params.columns
+                ? params.question_group_params.columns.map((col) => ({ value: col.value }))
+                : [],
             },
           };
         }

@@ -33,12 +33,14 @@ export const FormOptionSchema = z
   .object({
     value: z.string().describe("Option text value"),
     goToAction: GoToActionSchema.optional().describe(
-      "Branching action to take when this option is selected. Either all or no options should be set with this property."
+      "Branching action to take when this option is selected. Either all or no options should be set with this property.",
     ),
     goToSectionId: z
       .string()
       .optional()
-      .describe("Section ID to navigate to when this option is selected. You can first create a section and then use the section ID here."),
+      .describe(
+        "Section ID to navigate to when this option is selected. You can first create a section and then use the section ID here.",
+      ),
   })
   .describe("Form option with optional branching capability");
 
@@ -87,7 +89,7 @@ const CorrectAnswersSchema = z
       .array(
         z.object({
           value: z.string().describe("Correct answer value"),
-        })
+        }),
       )
       .describe("List of correct answers"),
   })
@@ -104,11 +106,13 @@ export const GradingSchema = z
     whenWrong: FeedbackSchema.optional().describe("Feedback when the answer is incorrect"),
     generalFeedback: FeedbackSchema.optional().describe("General feedback for the question"),
   })
-  .describe("Grading for a question. If you want to set grading, you must first set isQuiz to true by sending separate batchUpdate request. You can't set isQuiz and grading in the same request. ");
+  .describe(
+    "Grading for a question. If you want to set grading, you must first set isQuiz to true by sending separate batchUpdate request. You can't set isQuiz and grading in the same request. ",
+  );
 
 /**
-* Supported operations for batch updates
-*/
+ * Supported operations for batch updates
+ */
 export const SUPPORTED_OPERATIONS = [
   "create_item",
   "update_item",
@@ -139,14 +143,8 @@ export const QuestionGroupRowSchema = z.object({
 const QuestionGroupParamsSchema = z.object({
   rows: z.array(QuestionGroupRowSchema).optional().describe("Rows for question groups"),
   is_grid: z.boolean().optional().describe("Whether this is a grid-style question group"),
-  columns: z
-    .array(FormOptionSchema)
-    .optional()
-    .describe("Columns for grid-style question groups"),
-  grid_type: z
-    .enum(["CHECKBOX", "RADIO"])
-    .optional()
-    .describe("Selection type for grid questions"),
+  columns: z.array(FormOptionSchema).optional().describe("Columns for grid-style question groups"),
+  grid_type: z.enum(["CHECKBOX", "RADIO"]).optional().describe("Selection type for grid questions"),
   shuffle_questions: z.boolean().optional().describe("Whether to shuffle questions in the group"),
 });
 
@@ -188,7 +186,9 @@ export const UpdateItemRequestSchema = z
         `A comma-separated list of fully qualified names of fields. Example: "user.displayName,photo"`,
       ),
   })
-  .describe("Request object for updating an item. You can not convert to different item types. For example, a PageBreakItem cannot be changed into another Item type by an Update operation.");
+  .describe(
+    "Request object for updating an item. You can not convert to different item types. For example, a PageBreakItem cannot be changed into another Item type by an Update operation.",
+  );
 
 /**
  * Schema for delete item request in batch operations

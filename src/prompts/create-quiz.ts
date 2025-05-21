@@ -12,13 +12,15 @@ export class CreateQuizPrompt implements IMCPPrompt {
    */
   readonly schema = {
     quizTitle: z.string().describe("Title of the quiz"),
-    questions: z.array(
-      z.object({
-        question: z.string().describe("Question text"),
-        options: z.array(z.string()).describe("Answer options"),
-        correctAnswer: z.string().describe("Correct answer"),
-      })
-    ).describe("List of questions in the quiz"),
+    questions: z
+      .array(
+        z.object({
+          question: z.string().describe("Question text"),
+          options: z.array(z.string()).describe("Answer options"),
+          correctAnswer: z.string().describe("Correct answer"),
+        }),
+      )
+      .describe("List of questions in the quiz"),
   } as const;
 
   /**
@@ -32,7 +34,7 @@ export class CreateQuizPrompt implements IMCPPrompt {
           content: {
             type: "text" as const,
             text: "I am a quiz generator. Create a quiz based on the provided title and questions. First update Google Forms to quiz mode with single update request, then create the quiz with the provided questions.",
-          }
+          },
         },
       ],
     };

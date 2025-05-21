@@ -48,9 +48,7 @@ export interface IMCPTool<TParams extends Record<string, z.ZodType> = Record<str
 /**
  * Interface for MCP prompts
  */
-export interface IMCPPrompt<
-  TParams extends Record<string, z.ZodType> = Record<string, z.ZodType>,
-> {
+export interface IMCPPrompt<TParams extends Record<string, z.ZodType> = Record<string, z.ZodType>> {
   /**
    * Prompt name
    */
