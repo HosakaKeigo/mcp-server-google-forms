@@ -1,6 +1,7 @@
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { FormOption } from "./request-types.js";
+import type { forms_v1 } from "@googleapis/forms";
 
 /**
  * Utility type to infer parameter types from Zod schema
@@ -125,4 +126,9 @@ export type BatchUpdateOperation = {
   required?: boolean;
   include_other?: boolean;
   new_index?: number;
+
+  updateItemRequest?: {
+    item: forms_v1.Schema$Item;
+    update_mask: string;
+  };
 };

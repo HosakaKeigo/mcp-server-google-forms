@@ -106,7 +106,7 @@ export class UpdateItemTool {
       }
 
       // Update the item
-      const result = await service.updateItem(formId, args.index, item);
+      const result = await service.updateItem(formId, item, { index: args.index }, updateMaskParts.join(","));
 
       // Create message with update details
       let message = `Updated item at index ${args.index}: `;

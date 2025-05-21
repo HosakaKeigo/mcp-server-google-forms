@@ -1,3 +1,4 @@
+import type { forms_v1 } from "@googleapis/forms";
 import type { ItemType, QuestionType } from "./index.js";
 
 // GoToAction enum for branching in forms
@@ -30,10 +31,9 @@ export type CreateItemRequestParams = {
 };
 
 export type UpdateItemRequestParams = {
-  index: number;
-  title?: string;
-  description?: string;
-  required?: boolean;
+  item: forms_v1.Schema$Item;
+  location: forms_v1.Schema$Location;
+  updateMask: string;
 };
 
 export type DeleteItemRequestParams = {

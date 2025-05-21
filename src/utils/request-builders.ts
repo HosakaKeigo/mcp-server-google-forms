@@ -146,55 +146,30 @@ export function buildCreateItemRequest(
 
 /**
  * Request builder: Generate update item request
- * @param params Parameters
- * @param currentItem Current item data (for checking required field updates)
+ * @param params Parameters containing item, location and updateMask
  * @returns Update request object
  */
 export function buildUpdateItemRequest(
   params: UpdateItemRequestParams,
-  currentItem?: forms_v1.Schema$Item,
 ): forms_v1.Schema$Request | Error {
   try {
-    const item: Partial<forms_v1.Schema$Item> = {};
-    const updateMaskParts: string[] = [];
-
-    // Set fields to update
-    if (params.title !== undefined) {
-      item.title = params.title;
-      updateMaskParts.push("title");
+    if (!params.item) {
+      throw new Error("item is required for updating an item");
     }
 
-    if (params.description !== undefined) {
-      item.description = params.description;
-      updateMaskParts.push("description");
+    if (!params.location) {
+      throw new Error("location is required for updating an item");
     }
 
-    // For question items, update the required setting
-    if (params.required !== undefined) {
-      if (currentItem?.questionItem) {
-        if (!item.questionItem) {
-          item.questionItem = { question: {} };
-        }
-        if (!item.questionItem.question) {
-          item.questionItem.question = {};
-        }
-        item.questionItem.question.required = params.required;
-        updateMaskParts.push("questionItem.question.required");
-      } else {
-        throw new Error("The 'required' field can only be set for question items");
-      }
-    }
-
-    // Error if no fields to update
-    if (updateMaskParts.length === 0) {
-      throw new Error("No fields specified to update");
+    if (!params.updateMask) {
+      throw new Error("updateMask is required for updating an item");
     }
 
     return {
       updateItem: {
-        item: item as forms_v1.Schema$Item,
-        location: { index: params.index },
-        updateMask: updateMaskParts.join(","),
+        item: params.item,
+        location: params.location,
+        updateMask: params.updateMask,
       },
     };
   } catch (error) {

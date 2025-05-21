@@ -439,23 +439,18 @@ export class GFormService {
    * @param updateMask Mask specifying which fields to update
    * @returns Update result
    */
-  async updateItem(formId: string, index: number, item: forms_v1.Schema$Item) {
+  async updateItem(
+    formId: string,
+    item: forms_v1.Schema$Item,
+    location: forms_v1.Schema$Location,
+    updateMask: string
+  ) {
     try {
-      const form = await this.getForm(formId);
-      if (!form.items || index >= form.items.length) {
-        throw new Error(`Item at index ${index} not found`);
-      }
-
-      const currentItem = form.items[index];
-      const request = buildUpdateItemRequest(
-        {
-          index,
-          title: item.title ?? undefined,
-          description: item.description ?? undefined,
-          required: item.questionItem?.question?.required ?? undefined,
-        },
-        currentItem,
-      );
+      const request = buildUpdateItemRequest({
+        item,
+        location,
+        updateMask,
+      });
 
       if (request instanceof Error) {
         throw request;

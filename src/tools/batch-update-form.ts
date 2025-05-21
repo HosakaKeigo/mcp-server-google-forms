@@ -51,7 +51,7 @@ export class BatchUpdateFormTool {
           // Common parameters
           index: z.number().optional().describe("Index of the target item (when needed)"),
 
-          // Parameters for creating and updating items
+          // Parameters for creating items
           title: z.string().optional().describe("Item title"),
           description: z.string().optional().describe("Item description"),
 
@@ -69,6 +69,11 @@ export class BatchUpdateFormTool {
 
           // Parameters for moving items
           new_index: z.number().optional().describe("Destination index (required when using move_item)"),
+
+          update_item_request: z.object({
+            item: z.any().describe("Full item object after update. (only for update_item operation)"),
+            update_mask: z.string().describe(`A comma-separated list of fully qualified names of fields. Example: "user.displayName,photo". (only for update_item operation)`),
+          }).optional().describe("Request object for updating an item. (only for update_item operation)"),
         }),
       )
       .describe("List of operations to execute"),
@@ -132,16 +137,17 @@ export class BatchUpdateFormTool {
               if (op.index < 0 || !form.items || op.index >= form.items.length) {
                 throw new Error(`Operation #${opIndex + 1}: Index ${op.index} is out of range`);
               }
-              const currentItem = form.items[op.index];
-              request = buildUpdateItemRequest(
-                {
-                  index: op.index,
-                  title: op.title,
-                  description: op.description,
-                  required: op.required,
-                },
-                currentItem,
-              );
+
+              // itemとupdate_maskの両方が必須
+              if (!op.updateItemRequest) {
+                throw new Error(`Operation #${opIndex + 1}: 'updateItemRequest' is required for update_item operations`);
+              }
+
+              request = buildUpdateItemRequest({
+                item: op.updateItemRequest.item,
+                location: { index: op.index },
+                updateMask: op.updateItemRequest.update_mask,
+              });
               break;
             }
             case "delete_item": {
@@ -251,11 +257,7 @@ ${JSON.stringify(result.form, null, 2)}`,
           }`;
 
       case "update_item": {
-        const updates: string[] = [];
-        if (op.title !== undefined) updates.push(`title="${op.title}"`);
-        if (op.description !== undefined) updates.push(`description="${op.description}"`);
-        if (op.required !== undefined) updates.push(`required=${op.required}`);
-        return `Update item: index=${op.index}, changes: ${updates.join(", ")}`;
+        return `Update item: index=${op.index}, fields: ${op.updateItemRequest?.update_mask}`;
       }
 
       case "delete_item":
