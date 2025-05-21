@@ -1,41 +1,17 @@
-import type { ItemType, QuestionType } from "./index.js";
+import type z from "zod";
+import type {
+  CreateItemRequestSchema,
+  DeleteItemRequestSchema,
+  MoveItemRequestSchema,
+  UpdateFormInfoRequestSchema,
+  UpdateFormSettingsRequestSchema,
+  UpdateItemRequestSchema,
+} from "./schemas.js";
 
 // Parameter type definitions for Google Forms requests
-
-export type CreateItemRequestParams = {
-  title: string;
-  description?: string;
-  index?: number;
-  itemType: ItemType;
-  questionType?: QuestionType;
-  options?: string[];
-  required?: boolean;
-  includeOther?: boolean;
-  // For question_group only
-  rows?: { title: string; required?: boolean }[];
-  isGrid?: boolean;
-  columns?: string[];
-  gridType?: "CHECKBOX" | "RADIO";
-  shuffleQuestions?: boolean;
-};
-
-export type UpdateItemRequestParams = {
-  index: number;
-  title?: string;
-  description?: string;
-  required?: boolean;
-};
-
-export type DeleteItemRequestParams = {
-  index: number;
-};
-
-export type MoveItemRequestParams = {
-  index: number;
-  newIndex: number;
-};
-
-export type UpdateFormInfoRequestParams = {
-  title?: string;
-  description?: string;
-};
+export type CreateItemRequestParams = z.infer<typeof CreateItemRequestSchema>;
+export type UpdateItemRequestParams = z.infer<typeof UpdateItemRequestSchema>;
+export type DeleteItemRequestParams = z.infer<typeof DeleteItemRequestSchema>;
+export type MoveItemRequestParams = z.infer<typeof MoveItemRequestSchema>;
+export type UpdateFormInfoRequestParams = z.infer<typeof UpdateFormInfoRequestSchema>;
+export type UpdateFormSettingsRequestParams = z.infer<typeof UpdateFormSettingsRequestSchema>;

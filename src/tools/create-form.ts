@@ -30,7 +30,9 @@ export class CreateFormTool {
       .boolean()
       .optional()
       .default(false)
-      .describe("Whether to unpublish the form (if true, does not accept responses, default is false)"),
+      .describe(
+        "Whether to unpublish the form (if true, does not accept responses, default is false)",
+      ),
   };
 
   /**

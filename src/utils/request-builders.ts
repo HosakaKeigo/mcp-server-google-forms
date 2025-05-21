@@ -4,6 +4,7 @@ import type {
   DeleteItemRequestParams,
   MoveItemRequestParams,
   UpdateFormInfoRequestParams,
+  UpdateFormSettingsRequestParams,
   UpdateItemRequestParams,
 } from "../types/request-types.js";
 
@@ -30,7 +31,7 @@ export function buildCreateItemRequest(
     }
 
     // Set data based on item type
-    switch (params.itemType) {
+    switch (params.item_type) {
       case "text":
         item.textItem = {};
         break;
@@ -40,7 +41,7 @@ export function buildCreateItemRequest(
         break;
 
       case "question": {
-        if (!params.questionType) {
+        if (!params.question_type) {
           throw new Error("questionType is required when creating a question item");
         }
 
@@ -50,10 +51,10 @@ export function buildCreateItemRequest(
           },
         };
 
-        if (params.questionType === "TEXT" || params.questionType === "PARAGRAPH_TEXT") {
+        if (params.question_type === "TEXT" || params.question_type === "PARAGRAPH_TEXT") {
           if (item.questionItem?.question) {
             item.questionItem.question.textQuestion = {
-              paragraph: params.questionType === "PARAGRAPH_TEXT",
+              paragraph: params.question_type === "PARAGRAPH_TEXT",
             };
           }
         } else {
@@ -62,21 +63,33 @@ export function buildCreateItemRequest(
             throw new Error("Multiple-choice questions require options");
           }
 
-          const optionsArray: forms_v1.Schema$Option[] = params.options.map((opt: string) => ({
-            value: opt,
-          }));
+          // Process options with unified format
+          const optionsArray: forms_v1.Schema$Option[] = [];
+
+          for (const opt of params.options) {
+            const option: forms_v1.Schema$Option = { value: opt.value };
+
+            // Add branching logic if present
+            if (opt.goToAction) {
+              option.goToAction = opt.goToAction;
+            } else if (opt.goToSectionId) {
+              option.goToSectionId = opt.goToSectionId;
+            }
+
+            optionsArray.push(option);
+          }
 
           // Add "Other" option
           if (
-            params.includeOther &&
-            (params.questionType === "RADIO" || params.questionType === "CHECKBOX")
+            params.include_other &&
+            (params.question_type === "RADIO" || params.question_type === "CHECKBOX")
           ) {
             optionsArray.push({ isOther: true });
           }
 
           if (item.questionItem?.question) {
             item.questionItem.question.choiceQuestion = {
-              type: params.questionType,
+              type: params.question_type,
               options: optionsArray,
             };
           }
@@ -85,31 +98,31 @@ export function buildCreateItemRequest(
       }
 
       case "questionGroup": {
-        if (!params.rows || params.rows.length === 0) {
+        if (!params.question_group_params?.rows || params.question_group_params.rows.length === 0) {
           throw new Error("Question group requires at least one row (question)");
         }
         item.questionGroupItem = {
-          questions: params.rows.map((row: { title: string; required?: boolean }) => ({
+          questions: params.question_group_params.rows.map((row: { title: string; required?: boolean }) => ({
             required: row.required ?? false,
             rowQuestion: {
               title: row.title,
             },
           })),
         };
-        if (params.isGrid) {
-          if (!params.columns || params.columns.length === 0) {
+        if (params.question_group_params.is_grid) {
+          if (!params.question_group_params.columns || params.question_group_params.columns.length === 0) {
             throw new Error("Grid-style question group requires columns (options)");
           }
-          if (!params.gridType) {
+          if (!params.question_group_params.grid_type) {
             throw new Error(
               "Grid-style question group requires a selection type (CHECKBOX or RADIO)",
             );
           }
           item.questionGroupItem.grid = {
-            shuffleQuestions: params.shuffleQuestions ?? false,
+            shuffleQuestions: params.question_group_params.shuffle_questions ?? false,
             columns: {
-              type: params.gridType,
-              options: params.columns.map((col: string) => ({ value: col })),
+              type: params.question_group_params.grid_type,
+              options: params.question_group_params.columns ? params.question_group_params.columns.map((col) => ({ value: col.value })) : [],
             },
           };
         }
@@ -117,7 +130,7 @@ export function buildCreateItemRequest(
       }
 
       default:
-        throw new Error(`Unknown item type: ${params.itemType}`);
+        throw new Error(`Unknown item type: ${params.item_type}`);
     }
 
     return {
@@ -133,55 +146,30 @@ export function buildCreateItemRequest(
 
 /**
  * Request builder: Generate update item request
- * @param params Parameters
- * @param currentItem Current item data (for checking required field updates)
+ * @param params Parameters containing item, location and updateMask
  * @returns Update request object
  */
 export function buildUpdateItemRequest(
   params: UpdateItemRequestParams,
-  currentItem?: forms_v1.Schema$Item,
 ): forms_v1.Schema$Request | Error {
   try {
-    const item: Partial<forms_v1.Schema$Item> = {};
-    const updateMaskParts: string[] = [];
-
-    // Set fields to update
-    if (params.title !== undefined) {
-      item.title = params.title;
-      updateMaskParts.push("title");
+    if (!params.item) {
+      throw new Error("item is required for updating an item");
     }
 
-    if (params.description !== undefined) {
-      item.description = params.description;
-      updateMaskParts.push("description");
+    if (params.index === undefined) {
+      throw new Error("index is required for updating an item");
     }
 
-    // For question items, update the required setting
-    if (params.required !== undefined) {
-      if (currentItem?.questionItem) {
-        if (!item.questionItem) {
-          item.questionItem = { question: {} };
-        }
-        if (!item.questionItem.question) {
-          item.questionItem.question = {};
-        }
-        item.questionItem.question.required = params.required;
-        updateMaskParts.push("questionItem.question.required");
-      } else {
-        throw new Error("The 'required' field can only be set for question items");
-      }
-    }
-
-    // Error if no fields to update
-    if (updateMaskParts.length === 0) {
-      throw new Error("No fields specified to update");
+    if (!params.update_mask) {
+      throw new Error("updateMask is required for updating an item");
     }
 
     return {
       updateItem: {
-        item: item as forms_v1.Schema$Item,
+        item: params.item,
         location: { index: params.index },
-        updateMask: updateMaskParts.join(","),
+        updateMask: params.update_mask,
       },
     };
   } catch (error) {
@@ -211,7 +199,7 @@ export function buildMoveItemRequest(params: MoveItemRequestParams): forms_v1.Sc
   return {
     moveItem: {
       originalLocation: { index: params.index },
-      newLocation: { index: params.newIndex },
+      newLocation: { index: params.new_index },
     },
   };
 }
@@ -246,6 +234,59 @@ export function buildUpdateFormInfoRequest(
     return {
       updateFormInfo: {
         info,
+        updateMask: updateMaskParts.join(","),
+      },
+    };
+  } catch (error) {
+    return error as Error;
+  }
+}
+
+/**
+ * Request builder: Generate update form settings request
+ * @param params Parameters
+ * @returns Update request object
+ */
+export function buildUpdateFormSettingsRequest(
+  params: UpdateFormSettingsRequestParams,
+): forms_v1.Schema$Request | Error {
+  try {
+    const settings: {
+      emailCollectionType?: string;
+      quizSettings?: {
+        isQuiz?: boolean;
+        releaseGrade?: string;
+      };
+    } = {};
+    const updateMaskParts: string[] = [];
+
+    if (params.email_collection_type !== undefined) {
+      settings.emailCollectionType = params.email_collection_type;
+      updateMaskParts.push("emailCollectionType");
+    }
+
+    if (params.is_quiz !== undefined || params.release_grade !== undefined) {
+      settings.quizSettings = {};
+
+      if (params.is_quiz !== undefined) {
+        settings.quizSettings.isQuiz = params.is_quiz;
+        updateMaskParts.push("quizSettings.isQuiz");
+      }
+
+      if (params.release_grade !== undefined) {
+        settings.quizSettings.releaseGrade = params.release_grade;
+        updateMaskParts.push("quizSettings.releaseGrade");
+      }
+    }
+
+    // Error if no fields to update
+    if (updateMaskParts.length === 0) {
+      throw new Error("No form settings specified to update");
+    }
+
+    return {
+      updateSettings: {
+        settings,
         updateMask: updateMaskParts.join(","),
       },
     };
