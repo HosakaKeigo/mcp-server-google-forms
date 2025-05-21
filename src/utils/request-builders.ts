@@ -98,31 +98,31 @@ export function buildCreateItemRequest(
       }
 
       case "questionGroup": {
-        if (!params.rows || params.rows.length === 0) {
+        if (!params.question_group_params?.rows || params.question_group_params.rows.length === 0) {
           throw new Error("Question group requires at least one row (question)");
         }
         item.questionGroupItem = {
-          questions: params.rows.map((row: { title: string; required?: boolean }) => ({
+          questions: params.question_group_params.rows.map((row: { title: string; required?: boolean }) => ({
             required: row.required ?? false,
             rowQuestion: {
               title: row.title,
             },
           })),
         };
-        if (params.isGrid) {
-          if (!params.columns || params.columns.length === 0) {
+        if (params.question_group_params.is_grid) {
+          if (!params.question_group_params.columns || params.question_group_params.columns.length === 0) {
             throw new Error("Grid-style question group requires columns (options)");
           }
-          if (!params.gridType) {
+          if (!params.question_group_params.grid_type) {
             throw new Error(
               "Grid-style question group requires a selection type (CHECKBOX or RADIO)",
             );
           }
           item.questionGroupItem.grid = {
-            shuffleQuestions: params.shuffleQuestions ?? false,
+            shuffleQuestions: params.question_group_params.shuffle_questions ?? false,
             columns: {
-              type: params.gridType,
-              options: params.columns ? params.columns.map((col) => ({ value: col.value })) : [],
+              type: params.question_group_params.grid_type,
+              options: params.question_group_params.columns ? params.question_group_params.columns.map((col) => ({ value: col.value })) : [],
             },
           };
         }

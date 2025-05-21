@@ -70,6 +70,23 @@ export const QuestionGroupRowSchema = z.object({
 });
 
 /**
+ * Schema for question group specific parameters
+ */
+const QuestionGroupParamsSchema = z.object({
+  rows: z.array(QuestionGroupRowSchema).optional().describe("Rows for question groups"),
+  is_grid: z.boolean().optional().describe("Whether this is a grid-style question group"),
+  columns: z
+    .array(FormOptionSchema)
+    .optional()
+    .describe("Columns for grid-style question groups"),
+  grid_type: z
+    .enum(["CHECKBOX", "RADIO"])
+    .optional()
+    .describe("Selection type for grid questions"),
+  shuffle_questions: z.boolean().optional().describe("Whether to shuffle questions in the group"),
+});
+
+/**
  * Schema for create item request in batch operations
  */
 export const CreateItemRequestSchema = z
@@ -87,18 +104,9 @@ export const CreateItemRequestSchema = z
       .describe("List of options with optional branching logic"),
     required: z.boolean().optional().describe("Whether the question is required"),
     include_other: z.boolean().optional().describe("Whether to include an 'Other' option"),
-    // For question_group only
-    rows: z.array(QuestionGroupRowSchema).optional().describe("Rows for question groups"),
-    isGrid: z.boolean().optional().describe("Whether this is a grid-style question group"),
-    columns: z
-      .array(FormOptionSchema)
-      .optional()
-      .describe("Columns for grid-style question groups"),
-    gridType: z
-      .enum(["CHECKBOX", "RADIO"])
-      .optional()
-      .describe("Selection type for grid questions"),
-    shuffleQuestions: z.boolean().optional().describe("Whether to shuffle questions in the group"),
+    question_group_params: QuestionGroupParamsSchema.optional().describe(
+      "Parameters specific to question group items",
+    ),
   })
   .describe("Request object for creating an item");
 
