@@ -1,45 +1,6 @@
 import { forms, type forms_v1 } from "@googleapis/forms";
 import { GoogleAuth } from "google-auth-library";
 import { ERROR_MESSAGES } from "../constants/errors.js";
-import type { FormOption } from "../types/index.js";
-
-/**
- * Question types for Forms
- */
-export type QuestionType = "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
-
-/**
- * Google Forms item data type
- */
-export type FormItemData = {
-  text: Record<string, never>;
-  pageBreak: Record<string, never>;
-  question: {
-    required: boolean;
-    questionType: QuestionType;
-    options?: FormOption[];
-    includeOther?: boolean;
-  };
-  questionGroup: {
-    isGrid: boolean;
-    gridType?: "CHECKBOX" | "RADIO";
-    columns?: string[];
-    shuffleQuestions?: boolean;
-    rows: { title: string; required?: boolean }[];
-  };
-  // When adding new item types in the future, just add definitions here
-  // Example: image: { url: string; width?: number };
-};
-
-/**
- * Type representing Google Forms item types
- */
-export type FormItemType = {
-  [K in keyof FormItemData]: {
-    type: K;
-    data: FormItemData[K];
-  };
-}[keyof FormItemData];
 
 /**
  * Service class for operating the Google Forms API
