@@ -117,18 +117,42 @@ export const OperationTypeSchema = z
  */
 export type BatchUpdateOperation = {
   operation: OperationType;
-  index?: number;
-  title?: string;
-  description?: string;
-  item_type?: ItemType;
-  question_type?: QuestionType;
-  options?: FormOption[];
-  required?: boolean;
-  include_other?: boolean;
-  new_index?: number;
+
+  // Type-specific request objects
+  createItemRequest?: {
+    title: string;
+    description?: string;
+    index?: number;
+    item_type: ItemType;
+    question_type?: QuestionType;
+    options?: FormOption[];
+    required?: boolean;
+    include_other?: boolean;
+    // For question_group only
+    rows?: { title: string; required?: boolean }[];
+    isGrid?: boolean;
+    columns?: FormOption[];
+    gridType?: "CHECKBOX" | "RADIO";
+    shuffleQuestions?: boolean;
+  };
 
   updateItemRequest?: {
-    item: forms_v1.Schema$Item;
-    update_mask: string;
+    item?: forms_v1.Schema$Item;
+    index: number;
+    update_mask?: string;
+  };
+
+  deleteItemRequest?: {
+    index: number;
+  };
+
+  moveItemRequest?: {
+    index: number;
+    new_index: number;
+  };
+
+  updateFormInfoRequest?: {
+    title?: string;
+    description?: string;
   };
 };

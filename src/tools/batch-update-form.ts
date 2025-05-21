@@ -48,32 +48,47 @@ export class BatchUpdateFormTool {
           // Operation type
           operation: OperationTypeSchema,
 
-          // Common parameters
-          index: z.number().optional().describe("Index of the target item (when needed)"),
+          createItemRequest: z.object({
+            title: z.string().describe("Item title"),
+            description: z.string().optional().describe("Item description"),
+            index: z.number().optional().describe("Insertion position (appends to the end if omitted)"),
+            item_type: ItemTypeSchema.describe("Type of item to create"),
+            question_type: QuestionTypeSchema.optional().describe("Type of question (required when creating question items)"),
+            options: z.array(FormOptionSchema).optional().describe("List of options with optional branching logic"),
+            required: z.boolean().optional().describe("Whether the question is required"),
+            include_other: z.boolean().optional().describe("Whether to include an 'Other' option"),
+            // For question_group only
+            rows: z.array(
+              z.object({
+                title: z.string().describe("Row title"),
+                required: z.boolean().optional().describe("Whether this row is required")
+              })
+            ).optional().describe("Rows for question groups"),
+            isGrid: z.boolean().optional().describe("Whether this is a grid-style question group"),
+            columns: z.array(FormOptionSchema).optional().describe("Columns for grid-style question groups"),
+            gridType: z.enum(["CHECKBOX", "RADIO"]).optional().describe("Selection type for grid questions"),
+            shuffleQuestions: z.boolean().optional().describe("Whether to shuffle questions in the group")
+          }).optional().describe("Request object for creating an item"),
 
-          // Parameters for creating items
-          title: z.string().optional().describe("Item title"),
-          description: z.string().optional().describe("Item description"),
+          updateItemRequest: z.object({
+            item: z.any().describe("Full item object after update"),
+            index: z.number().describe("Index of the item to update"),
+            update_mask: z.string().describe(`A comma-separated list of fully qualified names of fields. Example: "user.displayName,photo"`),
+          }).optional().describe("Request object for updating an item"),
 
-          // Item type information (for create_item)
-          item_type: ItemTypeSchema.optional(),
+          deleteItemRequest: z.object({
+            index: z.number().describe("Index of the item to delete")
+          }).optional().describe("Request object for deleting an item"),
 
-          // Question type information (when creating questions)
-          question_type: QuestionTypeSchema.optional(),
-          options: z.array(FormOptionSchema).optional().describe("List of options with optional branching logic (for multiple-choice questions)"),
-          required: z.boolean().optional().describe("Whether the question is required"),
-          include_other: z
-            .boolean()
-            .optional()
-            .describe("Whether to include an 'Other' option (for multiple-choice questions)"),
+          moveItemRequest: z.object({
+            index: z.number().describe("Original index of the item to move"),
+            new_index: z.number().describe("Destination index for the item")
+          }).optional().describe("Request object for moving an item"),
 
-          // Parameters for moving items
-          new_index: z.number().optional().describe("Destination index (required when using move_item)"),
-
-          update_item_request: z.object({
-            item: z.any().describe("Full item object after update. (only for update_item operation)"),
-            update_mask: z.string().describe(`A comma-separated list of fully qualified names of fields. Example: "user.displayName,photo". (only for update_item operation)`),
-          }).optional().describe("Request object for updating an item. (only for update_item operation)"),
+          updateFormInfoRequest: z.object({
+            title: z.string().optional().describe("New form title"),
+            description: z.string().optional().describe("New form description")
+          }).optional().describe("Request object for updating form information"),
         }),
       )
       .describe("List of operations to execute"),
@@ -112,76 +127,92 @@ export class BatchUpdateFormTool {
           let request: forms_v1.Schema$Request | Error | undefined;
           switch (op.operation) {
             case "create_item": {
-              if (!op.item_type) {
-                throw new Error(`Operation #${opIndex + 1}: item_type is required when creating an item`);
-              }
-              if (!op.title) {
-                throw new Error(`Operation #${opIndex + 1}: title is required when creating an item`);
+              if (!op.createItemRequest) {
+                throw new Error(`Operation #${opIndex + 1}: createItemRequest is required when creating an item`);
               }
               request = buildCreateItemRequest({
-                title: op.title,
-                description: op.description,
-                index: op.index,
-                itemType: op.item_type,
-                questionType: op.question_type,
-                options: op.options,
-                required: op.required,
-                includeOther: op.include_other,
+                title: op.createItemRequest.title,
+                description: op.createItemRequest.description,
+                index: op.createItemRequest.index,
+                itemType: op.createItemRequest.item_type,
+                questionType: op.createItemRequest.question_type,
+                options: op.createItemRequest.options,
+                required: op.createItemRequest.required,
+                includeOther: op.createItemRequest.include_other,
+                rows: op.createItemRequest.rows,
+                isGrid: op.createItemRequest.isGrid,
+                columns: op.createItemRequest.columns,
+                gridType: op.createItemRequest.gridType,
+                shuffleQuestions: op.createItemRequest.shuffleQuestions,
               });
               break;
             }
             case "update_item": {
-              if (op.index === undefined) {
-                throw new Error(`Operation #${opIndex + 1}: index is required when updating an item`);
-              }
-              if (op.index < 0 || !form.items || op.index >= form.items.length) {
-                throw new Error(`Operation #${opIndex + 1}: Index ${op.index} is out of range`);
-              }
+              if (op.updateItemRequest) {
+                // op.index から取得
+                const itemIndex = op.updateItemRequest.index;
 
-              // itemとupdate_maskの両方が必須
-              if (!op.updateItemRequest) {
-                throw new Error(`Operation #${opIndex + 1}: 'updateItemRequest' is required for update_item operations`);
-              }
+                if (itemIndex === undefined) {
+                  throw new Error(`Operation #${opIndex + 1}: index is required when updating an item`);
+                }
 
-              request = buildUpdateItemRequest({
-                item: op.updateItemRequest.item,
-                location: { index: op.index },
-                updateMask: op.updateItemRequest.update_mask,
-              });
+                if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
+                  throw new Error(`Operation #${opIndex + 1}: Index ${itemIndex} is out of range`);
+                }
+
+                if (!op.updateItemRequest.item) {
+                  throw new Error(`Operation #${opIndex + 1}: 'item' is required in updateItemRequest`);
+                }
+
+                if (!op.updateItemRequest.update_mask) {
+                  throw new Error(`Operation #${opIndex + 1}: 'update_mask' is required in updateItemRequest`);
+                }
+
+                request = buildUpdateItemRequest({
+                  item: op.updateItemRequest.item,
+                  location: { index: itemIndex },
+                  updateMask: op.updateItemRequest.update_mask,
+                });
+              } else {
+                // 従来の形式はサポートしなくなったので、エラーを返す
+                throw new Error(`Operation #${opIndex + 1}: updateItemRequest is required for update_item operations`);
+              }
               break;
             }
             case "delete_item": {
-              if (op.index === undefined) {
-                throw new Error(`Operation #${opIndex + 1}: index is required when deleting an item`);
+              if (!op.deleteItemRequest) {
+                throw new Error(`Operation #${opIndex + 1}: deleteItemRequest is required when deleting an item`);
               }
-              if (op.index < 0 || !form.items || op.index >= form.items.length) {
-                throw new Error(`Operation #${opIndex + 1}: Index ${op.index} is out of range`);
+              const itemIndex = op.deleteItemRequest.index;
+              if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
+                throw new Error(`Operation #${opIndex + 1}: Index ${itemIndex} is out of range`);
               }
-              request = buildDeleteItemRequest({ index: op.index });
+              request = buildDeleteItemRequest({ index: itemIndex });
               break;
             }
             case "move_item": {
-              if (op.index === undefined) {
-                throw new Error(`Operation #${opIndex + 1}: index is required when moving an item`);
+              if (!op.moveItemRequest) {
+                throw new Error(`Operation #${opIndex + 1}: moveItemRequest is required when moving an item`);
               }
-              if (op.new_index === undefined) {
-                throw new Error(`Operation #${opIndex + 1}: new_index is required when moving an item`);
+              const itemIndex = op.moveItemRequest.index;
+              const newIndex = op.moveItemRequest.new_index;
+
+              if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
+                throw new Error(`Operation #${opIndex + 1}: Index ${itemIndex} is out of range`);
               }
-              if (op.index < 0 || !form.items || op.index >= form.items.length) {
-                throw new Error(`Operation #${opIndex + 1}: Index ${op.index} is out of range`);
+              if (newIndex < 0 || newIndex > form.items.length) {
+                throw new Error(`Operation #${opIndex + 1}: New index ${newIndex} is out of range`);
               }
-              if (op.new_index < 0 || op.new_index > form.items.length) {
-                throw new Error(
-                  `Operation #${opIndex + 1}: New index ${op.new_index} is out of range`,
-                );
-              }
-              request = buildMoveItemRequest({ index: op.index, newIndex: op.new_index });
+              request = buildMoveItemRequest({ index: itemIndex, newIndex: newIndex });
               break;
             }
             case "update_form_info": {
+              if (!op.updateFormInfoRequest) {
+                throw new Error(`Operation #${opIndex + 1}: updateFormInfoRequest is required when updating form info`);
+              }
               request = buildUpdateFormInfoRequest({
-                title: op.title,
-                description: op.description,
+                title: op.updateFormInfoRequest.title,
+                description: op.updateFormInfoRequest.description,
               });
               break;
             }
@@ -243,33 +274,45 @@ ${JSON.stringify(result.form, null, 2)}`,
    */
   private formatOperation(op: BatchUpdateOperation): string {
     switch (op.operation) {
-      case "create_item":
-        return `Create item: type=${op.item_type}, title="${op.title}"${op.index !== undefined ? `, position=${op.index}` : ""}${op.options
-          ? `, options=[${op.options
-            .map((o) => {
-              let desc = `"${o.value}"`;
-              if (o.goToAction) desc += ` (→${o.goToAction})`;
-              else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
-              return desc;
-            })
-            .join(", ")}]`
-          : ""
+      case "create_item": {
+        if (!op.createItemRequest) {
+          throw new Error("createItemRequest is required");
+        }
+        const req = op.createItemRequest;
+        return `Create item: type=${req.item_type}, title="${req.title}"${req.index !== undefined ? `, position=${req.index}` : ""
+          }${req.options
+            ? `, options=[${req.options
+              .map((o) => {
+                let desc = `"${o.value}"`;
+                if (o.goToAction) desc += ` (→${o.goToAction})`;
+                else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
+                return desc;
+              })
+              .join(", ")}]`
+            : ""
           }`;
-
-      case "update_item": {
-        return `Update item: index=${op.index}, fields: ${op.updateItemRequest?.update_mask}`;
       }
 
-      case "delete_item":
-        return `Delete item: index=${op.index}`;
+      case "update_item": {
+        return `Update item: index=${op.updateItemRequest?.index}, fields: ${op.updateItemRequest?.update_mask}`;
+      }
 
-      case "move_item":
-        return `Move item: index=${op.index} → ${op.new_index}`;
+      case "delete_item": {
+        return `Delete item: index=${op.deleteItemRequest?.index}`;
+      }
+
+      case "move_item": {
+        return `Move item: index=${op.moveItemRequest?.index} → ${op.moveItemRequest?.new_index}`;
+      }
 
       case "update_form_info": {
         const updates: string[] = [];
-        if (op.title !== undefined) updates.push(`title="${op.title}"`);
-        if (op.description !== undefined) updates.push(`description="${op.description}"`);
+        if (op.updateFormInfoRequest?.title !== undefined) {
+          updates.push(`title="${op.updateFormInfoRequest.title}"`);
+        }
+        if (op.updateFormInfoRequest?.description !== undefined) {
+          updates.push(`description="${op.updateFormInfoRequest.description}"`);
+        }
         return `Update form info: ${updates.join(", ")}`;
       }
 
