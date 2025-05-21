@@ -61,14 +61,31 @@ This is a Model Context Protocol (MCP) server for Google Forms that allows you t
    ```
 
 ## Usage
-
-Start the server:
-
+### Testing with `inspector`
 ```
-pnpm start
+$pnpm build
+$pnpm dlx @modelcontextprotocol/inspector node /path/to/mcp-server-google-forms/dist/index.js
 ```
 
-You can then configure your MCP client (e.g., Claude Desktop) to use this server.
+### Integration with Claude for Desktop
+Add the following to your claude_desktop_config.json file:
+
+```json
+{
+  "mcpServers": {
+    "google-forms": {
+      "command": "node",
+      "args": ["/path/to/mcp-server-google-form/dist/index.js"],
+      "env": {
+        "GOOGLE_PROJECT_ID": "your-project-id",
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/your/credentials.json"
+      }
+    }
+  }
+}
+```
+
+You may restart Claude Desktop to apply the changes.
 
 ### Available Tools
 
