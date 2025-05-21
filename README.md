@@ -2,9 +2,12 @@
 
 This is a Model Context Protocol (MCP) server for Google Forms that allows you to get and update Google Forms through Claude.
 
+![google-forms-mcp-demo](https://github.com/user-attachments/assets/7a62025f-3f02-4471-aed8-6d4a5e1edf86)
+
+
 ## Prerequisites
 
-- Node.js 16 or higher
+- Node.js 20 or higher
 - A Google Cloud project
 
 ## Setup
