@@ -1,9 +1,9 @@
 import { URL } from "node:url";
 
 /**
- * Google Forms URLからフォームIDを抽出する
+ * Extract form ID from Google Forms URL
  * @param formUrl Google Forms URL
- * @returns 抽出されたフォームID
+ * @returns Extracted form ID
  */
 export function extractFormId(formUrl: string): string {
   try {
@@ -27,10 +27,10 @@ export function extractFormId(formUrl: string): string {
       }
     }
 
-    throw new Error("フォームIDが見つかりませんでした");
+    throw new Error("Form ID not found");
   } catch (error) {
     throw new Error(
-      `フォームURLの解析中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+      `Error parsing form URL: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }

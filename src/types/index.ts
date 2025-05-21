@@ -2,7 +2,7 @@ import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
 /**
- * ZodスキーマからParamの型を推論するユーティリティ型
+ * Utility type to infer parameter types from Zod schema
  */
 export type InferZodParams<T extends Record<string, z.ZodType>> = {
   [K in keyof T]: z.infer<T[K]>;
@@ -39,41 +39,41 @@ export interface IMCPTool<TParams extends Record<string, z.ZodType> = Record<str
 }
 
 /**
- * フォームIDの型定義
+ * Form ID schema definition
  */
 export const FormIdSchema = z.string().min(1);
 
 /**
- * フォームURLの型定義
+ * Form URL schema definition
  */
 export const FormUrlSchema = z.string().url();
 
 /**
- * フォーム項目のタイプ
+ * Form item type
  */
 export type ItemType = "text" | "question" | "pageBreak" | "questionGroup";
 
 /**
- * フォーム項目タイプのZodスキーマ
+ * Zod schema for form item type
  */
 export const ItemTypeSchema = z
   .enum(["text", "question", "pageBreak", "questionGroup"])
-  .describe("作成する項目のタイプ");
+  .describe("Type of item to create");
 
 /**
- * 質問のタイプ
+ * Question type
  */
 export type QuestionType = "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
 
 /**
- * 質問タイプのZodスキーマ
+ * Zod schema for question type
  */
 export const QuestionTypeSchema = z
   .enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROP_DOWN"])
-  .describe("質問のタイプ");
+  .describe("Type of question");
 
 /**
- * 操作タイプ
+ * Operation type
  */
 export type OperationType =
   | "create_item"
@@ -83,14 +83,14 @@ export type OperationType =
   | "update_form_info";
 
 /**
- * 操作タイプのZodスキーマ
+ * Zod schema for operation type
  */
 export const OperationTypeSchema = z
   .enum(["create_item", "update_item", "delete_item", "move_item", "update_form_info"])
-  .describe("実行する操作のタイプ");
+  .describe("Type of operation to execute");
 
 /**
- * バッチ更新操作の型定義
+ * Batch update operation type definition
  */
 export type BatchUpdateOperation = {
   operation: OperationType;

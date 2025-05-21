@@ -1,8 +1,8 @@
-// エラー文言を一元管理する定数ファイル
+// Constants file for centralized error message management
 export const ERROR_MESSAGES = {
-  INVALID_FORM_URL: "無効なGoogleフォームURLです。",
-  FORM_NOT_FOUND: "指定されたフォームが見つかりません。",
-  UNAUTHORIZED: "認証に失敗しました。再度ログインしてください。",
-  API_ERROR: "Google Forms APIでエラーが発生しました。",
-  UNKNOWN: "不明なエラーが発生しました。",
+  INVALID_FORM_URL: "Invalid Google Form URL.",
+  FORM_NOT_FOUND: "The specified form could not be found.",
+  UNAUTHORIZED: "Authentication failed. Please log in again.",
+  API_ERROR: "An error occurred with the Google Forms API.",
+  UNKNOWN: "An unknown error occurred.",
 };

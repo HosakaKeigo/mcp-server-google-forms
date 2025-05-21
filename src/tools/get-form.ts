@@ -4,43 +4,43 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォームを取得するMCPツール
+ * MCP tool to get form information
  */
 export class GetFormTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "get_form";
 
   /**
-   * ツールの説明
+   * Tool description
    */
   readonly description =
-    "Google Formsの構造を取得します。編集するための準備として利用してください。";
+    "Retrieve the structure of a Google Form. Use this as preparation for editing.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameter definitions
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Execute the tool
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // フォーム情報を取得
+      // Get form information
       const form = new GFormService();
       const formData = await form.getForm(formId);
 
@@ -57,7 +57,7 @@ export class GetFormTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,

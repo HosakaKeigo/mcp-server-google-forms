@@ -11,12 +11,12 @@ import {
 } from "./request-builders.js";
 
 /**
- * Formsの質問タイプ
+ * Question types for Forms
  */
 export type QuestionType = "TEXT" | "PARAGRAPH_TEXT" | "RADIO" | "CHECKBOX" | "DROP_DOWN";
 
 /**
- * Google Formsの項目データ型
+ * Google Forms item data type
  */
 export type FormItemData = {
   text: Record<string, never>;
@@ -34,12 +34,12 @@ export type FormItemData = {
     shuffleQuestions?: boolean;
     rows: { title: string; required?: boolean }[];
   };
-  // 将来的に新しい項目タイプを追加する場合、ここに定義を追加するだけでよい
-  // 例: image: { url: string; width?: number };
+  // When adding new item types in the future, just add definitions here
+  // Example: image: { url: string; width?: number };
 };
 
 /**
- * Google Formsの項目タイプを表す型
+ * Type representing Google Forms item types
  */
 export type FormItemType = {
   [K in keyof FormItemData]: {
@@ -49,7 +49,7 @@ export type FormItemType = {
 }[keyof FormItemData];
 
 /**
- * Google Forms APIを操作するためのサービスクラス
+ * Service class for operating the Google Forms API
  */
 export class GFormService {
   private formClient: forms_v1.Forms;
@@ -65,9 +65,9 @@ export class GFormService {
   }
 
   /**
-   * Google Forms APIからフォーム情報を取得する
-   * @param formId フォームID
-   * @returns フォーム情報
+   * Retrieve form information from Google Forms API
+   * @param formId Form ID
+   * @returns Form information
    */
   async getForm(formId: string): Promise<forms_v1.Schema$Form> {
     try {
@@ -90,13 +90,13 @@ export class GFormService {
   }
 
   /**
-   * 共通の項目作成メソッド（型安全）
-   * @param formId フォームID
-   * @param title タイトル
-   * @param itemType 項目タイプとそれに関連するデータ
-   * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は末尾）
-   * @returns 更新結果
+   * Common method for creating items (type-safe)
+   * @param formId Form ID
+   * @param title Title
+   * @param itemType Item type and related data
+   * @param description Description (optional)
+   * @param index Insertion position (end of form if omitted)
+   * @returns Update result
    */
   private async createItem(
     formId: string,
@@ -105,16 +105,16 @@ export class GFormService {
     description?: string,
     index?: number,
   ) {
-    // 項目タイプに対応する日本語ラベル
+    // Labels for item types
     const itemTypeLabels: Record<keyof FormItemData, string> = {
-      text: "テキスト項目",
-      pageBreak: "ページ区切り",
-      question: "質問項目",
-      questionGroup: "質問グループ",
+      text: "Text item",
+      pageBreak: "Page break",
+      question: "Question item",
+      questionGroup: "Question group",
     };
 
     try {
-      // indexが指定されていない場合は、フォームの最後に追加
+      // If index is not specified, add to the end of the form
       let itemIndex = 0;
       if (index === undefined) {
         const form = await this.getForm(formId);
@@ -165,34 +165,34 @@ export class GFormService {
       });
       return result.data;
     } catch (error) {
-      const typeName = itemTypeLabels[itemType.type as keyof FormItemData] || "項目";
+      const typeName = itemTypeLabels[itemType.type as keyof FormItemData] || "item";
       throw new Error(
-        `フォームへの${typeName}追加中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while adding ${typeName} to form: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * フォームにテキスト項目を追加する
-   * @param formId フォームID
-   * @param title タイトル
-   * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は末尾）
-   * @returns 更新結果
+   * Add a text item to a form
+   * @param formId Form ID
+   * @param title Title
+   * @param description Description (optional)
+   * @param index Insertion position (end of form if omitted)
+   * @returns Update result
    */
   async addTextItem(formId: string, title: string, description?: string, index?: number) {
     return this.createItem(formId, title, { type: "text", data: {} }, description, index);
   }
 
   /**
-   * フォームに質問項目を追加する
-   * @param formId フォームID
-   * @param title タイトル
-   * @param questionType 質問タイプ
-   * @param options 選択肢（選択式の場合）
-   * @param required 必須かどうか
-   * @param index 挿入位置（省略時は末尾）
-   * @returns 更新結果
+   * Add a question item to a form
+   * @param formId Form ID
+   * @param title Title
+   * @param questionType Question type
+   * @param options Options (for selection-type questions)
+   * @param required Whether the question is required
+   * @param index Insertion position (end of form if omitted)
+   * @returns Update result
    */
   async addQuestionItem(
     formId: string,
@@ -221,15 +221,15 @@ export class GFormService {
   }
 
   /**
-   * フォームの項目を移動する
-   * @param formId フォームID
-   * @param originalIndex 移動元のインデックス
-   * @param newIndex 移動先のインデックス
-   * @returns 更新結果
+   * Move an item within a form
+   * @param formId Form ID
+   * @param originalIndex Original index
+   * @param newIndex New index
+   * @returns Update result
    */
   async moveItem(formId: string, originalIndex: number, newIndex: number) {
     try {
-      // buildMoveItemRequestを使用
+      // Use buildMoveItemRequest
       const request = buildMoveItemRequest({
         index: originalIndex,
         newIndex: newIndex,
@@ -238,17 +238,17 @@ export class GFormService {
       return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
-        `フォームの項目移動中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while moving item in form: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * フォームの基本情報（タイトルと説明）を更新する
-   * @param formId フォームID
-   * @param title 新しいタイトル（省略可）
-   * @param description 新しい説明（省略可）
-   * @returns 更新結果
+   * Update basic form information (title and description)
+   * @param formId Form ID
+   * @param title New title (optional)
+   * @param description New description (optional)
+   * @returns Update result
    */
   async updateFormInfo(formId: string, title?: string, description?: string) {
     try {
@@ -264,20 +264,20 @@ export class GFormService {
       return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
-        `フォーム情報の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while updating form information: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * フォームの項目を削除する
-   * @param formId フォームID
-   * @param index 削除する項目のインデックス
-   * @returns 更新結果
+   * Delete an item from a form
+   * @param formId Form ID
+   * @param index Index of the item to delete
+   * @returns Update result
    */
   async deleteItem(formId: string, index: number) {
     try {
-      // buildDeleteItemRequestを使用
+      // Use buildDeleteItemRequest
       const request = buildDeleteItemRequest({
         index: index,
       });
@@ -285,35 +285,35 @@ export class GFormService {
       return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
-        `フォームの項目削除中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while deleting form item: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * フォームにページ区切りを追加する
-   * @param formId フォームID
-   * @param title タイトル
-   * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は末尾）
-   * @returns 更新結果
+   * Add a page break to a form
+   * @param formId Form ID
+   * @param title Title
+   * @param description Description (optional)
+   * @param index Insertion position (end of form if omitted)
+   * @returns Update result
    */
   async addPageBreakItem(formId: string, title: string, description?: string, index?: number) {
     return this.createItem(formId, title, { type: "pageBreak", data: {} }, description, index);
   }
 
   /**
-   * フォームに質問グループを追加する
-   * @param formId フォームID
-   * @param title タイトル
-   * @param rows 行（質問）のリスト
-   * @param isGrid グリッド形式かどうか
-   * @param columns グリッド形式の場合の列（選択肢）
-   * @param gridType グリッド形式の場合の選択タイプ（ラジオボタンまたはチェックボックス）
-   * @param shuffleQuestions 質問をランダムに並べ替えるかどうか
-   * @param description 説明（省略可）
-   * @param index 挿入位置（省略時は末尾）
-   * @returns 更新結果
+   * Add a question group to a form
+   * @param formId Form ID
+   * @param title Title
+   * @param rows List of rows (questions)
+   * @param isGrid Whether to use grid format
+   * @param columns Grid columns (options) when using grid format
+   * @param gridType Grid selection type (radio buttons or checkboxes)
+   * @param shuffleQuestions Whether to randomize question order
+   * @param description Description (optional)
+   * @param index Insertion position (end of form if omitted)
+   * @returns Update result
    */
   async addQuestionGroupItem(
     formId: string,

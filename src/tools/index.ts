@@ -14,8 +14,8 @@ import { UpdateItemTool } from "./update-item.js";
 import { UpdateSettingsTool } from "./update-settings.js";
 
 /**
- * すべてのツールをサーバーに登録する
- * @param server MCPサーバーインスタンス
+ * Register all tools to the server
+ * @param server MCP server instance
  */
 export function registerTools(server: McpServer): void {
   const tools: IMCPTool[] = [

@@ -5,45 +5,45 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォームにテキスト項目を追加するMCPツール
+ * MCP tool to add a text item to a form
  */
 export class AddTextItemTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "add_text_item";
 
   /**
-   * ツールの説明
+   * Tool description
    */
-  readonly description = "Google Formsにテキスト項目（タイトルと説明のみの項目）を追加します。";
+  readonly description = "Add a text item (item with only title and description) to a Google Form.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameter definitions
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
-      "Google FormsのURL (例: https://docs.google.com/forms/d/e/FORM_ID/edit)",
+      "Google Forms URL (example: https://docs.google.com/forms/d/e/FORM_ID/edit)",
     ),
-    title: z.string().describe("項目のタイトル"),
-    description: z.string().optional().describe("項目の説明（省略可）"),
-    index: z.number().optional().describe("挿入位置（省略時は末尾）"),
+    title: z.string().describe("Item title"),
+    description: z.string().optional().describe("Item description (optional)"),
+    index: z.number().optional().describe("Insertion position (appends to the end if omitted)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Execute the tool
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // サービスのインスタンス化
+      // Initialize service
       const service = new GFormService();
       const result = await service.addTextItem(formId, args.title, args.description, args.index);
 
@@ -51,7 +51,7 @@ export class AddTextItemTool {
         content: [
           {
             type: "text",
-            text: `テキスト項目 "${args.title}" をフォームに追加しました。現在のフォームは下記です。
+            text: `Added text item "${args.title}" to the form. Current form items are:
 
             ${JSON.stringify(result.form?.items, null, 2)}`,
           },
