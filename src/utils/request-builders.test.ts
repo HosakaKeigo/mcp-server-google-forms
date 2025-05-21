@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildDeleteItemRequest } from './request-builders';
-import type { DeleteItemRequestParams } from '../types/request-types';
+import { buildDeleteItemRequest } from './request-builders.js';
+import type { DeleteItemRequestParams } from '../types/request-types.js';
 
 describe('buildDeleteItemRequest', () => {
   it('should correctly construct the deleteItem request object for a given index', () => {

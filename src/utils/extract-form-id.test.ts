@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractFormId } from './extract-form-id';
+import { extractFormId } from './extract-form-id.js';
 
 describe('extractFormId', () => {
   // Test cases for valid Google Form URLs
@@ -14,7 +14,7 @@ describe('extractFormId', () => {
     const expectedFormId = '1FAIpQLScLp9N9_N3Y71RONH2Hdl0x0Z5k2IuL2FA8E2TSS89LzL0hbA';
     expect(extractFormId(url)).toBe(expectedFormId);
   });
-  
+
   it('should extract form ID from URL pattern /d/{formId}/edit', () => {
     const url = 'https://docs.google.com/forms/d/FORM_ID_123/edit';
     const expectedFormId = 'FORM_ID_123';
@@ -37,7 +37,7 @@ describe('extractFormId', () => {
     const url = 'https://www.google.com';
     expect(() => extractFormId(url)).toThrowError(/Error parsing form URL: Invalid Google Forms URL/);
   });
-  
+
   it('should throw error for a Google Forms URL with an unrecognized path structure (no /d/)', () => {
     const url = 'https://docs.google.com/forms/somethingelse/FORM_ID_789/edit';
     expect(() => extractFormId(url)).toThrowError(/Error parsing form URL: Invalid Google Forms URL/);
