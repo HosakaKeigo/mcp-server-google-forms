@@ -4,52 +4,52 @@ import type { InferZodParams } from "../types/index.js";
 import { GFormService } from "../utils/api.js";
 
 /**
- * 新しいGoogleフォームを作成するMCPツール
+ * MCP tool to create a new Google Form
  */
 export class CreateFormTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "create_form";
 
   /**
-   * ツールの説明
+   * Tool description
    */
-  readonly description = "新しいGoogleフォームを作成します。タイトルのみを指定できます。";
+  readonly description = "Creates a new Google Form. You can only specify the title.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameters definition
    */
   readonly parameters = {
-    title: z.string().describe("フォームのタイトル"),
+    title: z.string().describe("Form title"),
     document_title: z
       .string()
       .optional()
-      .describe("ドキュメントのタイトル（省略時はフォームのタイトルと同じ）"),
+      .describe("Document title (if omitted, same as the form title)"),
     unpublished: z
       .boolean()
       .optional()
       .default(false)
-      .describe("公開しないかどうか（trueの場合は回答を受け付けない、デフォルトはfalse）"),
+      .describe("Whether to unpublish the form (if true, does not accept responses, default is false)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Tool execution
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // サービスのインスタンス化
+      // Initialize the service
       const service = new GFormService();
 
-      // フォームを作成
+      // Create the form
       const result = await service.createForm(args.title, args.document_title, args.unpublished);
 
-      // フォームURLの作成
+      // Create the form URL
       let formUrl = "";
       if (result.formId) {
         formUrl = `https://docs.google.com/forms/d/e/${result.formId}/edit`;
@@ -59,7 +59,7 @@ export class CreateFormTool {
         content: [
           {
             type: "text",
-            text: `フォームを作成しました。\nタイトル: ${args.title}\nフォームID: ${result.formId}\nURL: ${formUrl}`,
+            text: `Form created successfully.\nTitle: ${args.title}\nForm ID: ${result.formId}\nURL: ${formUrl}`,
           },
         ],
       };
@@ -68,7 +68,7 @@ export class CreateFormTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,
