@@ -324,12 +324,11 @@ export function buildUpdateFormSettingsRequest(
     }
 
     if (params.is_quiz !== undefined) {
-      settings.quizSettings = {};
-
-      if (params.is_quiz !== undefined) {
-        settings.quizSettings.isQuiz = params.is_quiz;
-        updateMaskParts.push("quizSettings.isQuiz");
+      if (!settings.quizSettings) {
+        settings.quizSettings = {};
       }
+      settings.quizSettings.isQuiz = params.is_quiz;
+      updateMaskParts.push("quizSettings.isQuiz");
     }
 
     // Error if no fields to update
