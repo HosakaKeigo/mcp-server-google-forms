@@ -51,6 +51,55 @@ export function buildCreateItemRequest(
           },
         };
 
+        // Add grading information if provided
+        if (params.grading) {
+          if (item.questionItem?.question) {
+            item.questionItem.question.grading = {
+              pointValue: params.grading.pointValue,
+            };
+
+            // Add correct answers if provided
+            if (params.grading.correctAnswers) {
+              item.questionItem.question.grading.correctAnswers = {
+                answers: params.grading.correctAnswers.answers,
+              };
+            }
+
+            // Add feedback when right if provided
+            if (params.grading.whenRight) {
+              item.questionItem.question.grading.whenRight = {
+                text: params.grading.whenRight.text,
+              };
+
+              if (params.grading.whenRight.material) {
+                item.questionItem.question.grading.whenRight.material = params.grading.whenRight.material;
+              }
+            }
+
+            // Add feedback when wrong if provided
+            if (params.grading.whenWrong) {
+              item.questionItem.question.grading.whenWrong = {
+                text: params.grading.whenWrong.text,
+              };
+
+              if (params.grading.whenWrong.material) {
+                item.questionItem.question.grading.whenWrong.material = params.grading.whenWrong.material;
+              }
+            }
+
+            // Add general feedback if provided
+            if (params.grading.generalFeedback) {
+              item.questionItem.question.grading.generalFeedback = {
+                text: params.grading.generalFeedback.text,
+              };
+
+              if (params.grading.generalFeedback.material) {
+                item.questionItem.question.grading.generalFeedback.material = params.grading.generalFeedback.material;
+              }
+            }
+          }
+        }
+
         if (params.question_type === "TEXT" || params.question_type === "PARAGRAPH_TEXT") {
           if (item.questionItem?.question) {
             item.questionItem.question.textQuestion = {
@@ -255,7 +304,6 @@ export function buildUpdateFormSettingsRequest(
       emailCollectionType?: string;
       quizSettings?: {
         isQuiz?: boolean;
-        releaseGrade?: string;
       };
     } = {};
     const updateMaskParts: string[] = [];
@@ -265,17 +313,12 @@ export function buildUpdateFormSettingsRequest(
       updateMaskParts.push("emailCollectionType");
     }
 
-    if (params.is_quiz !== undefined || params.release_grade !== undefined) {
+    if (params.is_quiz !== undefined) {
       settings.quizSettings = {};
 
       if (params.is_quiz !== undefined) {
         settings.quizSettings.isQuiz = params.is_quiz;
         updateMaskParts.push("quizSettings.isQuiz");
-      }
-
-      if (params.release_grade !== undefined) {
-        settings.quizSettings.releaseGrade = params.release_grade;
-        updateMaskParts.push("quizSettings.releaseGrade");
       }
     }
 

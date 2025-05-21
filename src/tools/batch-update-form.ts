@@ -225,7 +225,7 @@ ${JSON.stringify(result.form, null, 2)}`,
           throw new Error("createItemRequest is required");
         }
         const req = op.createItemRequest;
-        return `Create item: type=${req.item_type}, title="${req.title}"${req.index !== undefined ? `, position=${req.index}` : ""
+        let description = `Create item: type=${req.item_type}, title="${req.title}"${req.index !== undefined ? `, position=${req.index}` : ""
           }${req.options
             ? `, options=[${req.options
               .map((o) => {
@@ -237,6 +237,16 @@ ${JSON.stringify(result.form, null, 2)}`,
               .join(", ")}]`
             : ""
           }`;
+
+        // Add grading information to description if present
+        if (req.grading) {
+          description += `, points=${req.grading.pointValue}`;
+          if (req.grading.correctAnswers) {
+            description += `, correct answers=[${req.grading.correctAnswers.answers.map(a => `"${a.value}"`).join(", ")}]`;
+          }
+        }
+
+        return description;
       }
 
       case "update_item": {

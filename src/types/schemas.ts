@@ -43,6 +43,70 @@ export const FormOptionSchema = z
   .describe("Form option with optional branching capability");
 
 /**
+ * Extra material link schema for grading feedback
+ */
+const ExtraMaterialLinkSchema = z.object({
+  uri: z.string().describe("URI of the link"),
+  displayText: z.string().describe("Display text for the link"),
+});
+
+/**
+ * Extra material video schema for grading feedback
+ */
+const ExtraMaterialVideoSchema = z.object({
+  displayText: z.string().describe("Display text for the video"),
+  youtubeUri: z.string().describe("YouTube URI for the video"),
+});
+
+/**
+ * Extra material schema for grading feedback
+ */
+const ExtraMaterialSchema = z
+  .object({
+    link: ExtraMaterialLinkSchema.optional().describe("Link material"),
+    video: ExtraMaterialVideoSchema.optional().describe("Video material"),
+  })
+  .describe("Extra material for feedback, either link or video");
+
+/**
+ * Feedback schema for grading
+ */
+const FeedbackSchema = z
+  .object({
+    text: z.string().describe("Feedback text"),
+    material: z.array(ExtraMaterialSchema).optional().describe("Extra materials for feedback"),
+  })
+  .describe("Feedback for grading");
+
+/**
+ * Correct answers schema for grading
+ */
+const CorrectAnswersSchema = z
+  .object({
+    answers: z
+      .array(
+        z.object({
+          value: z.string().describe("Correct answer value"),
+        })
+      )
+      .describe("List of correct answers"),
+  })
+  .describe("Correct answers for grading");
+
+/**
+ * Grading schema for questions
+ */
+export const GradingSchema = z
+  .object({
+    pointValue: z.number().int().describe("Point value for the question"),
+    correctAnswers: CorrectAnswersSchema.optional().describe("Correct answers for the question"),
+    whenRight: FeedbackSchema.optional().describe("Feedback when the answer is correct"),
+    whenWrong: FeedbackSchema.optional().describe("Feedback when the answer is incorrect"),
+    generalFeedback: FeedbackSchema.optional().describe("General feedback for the question"),
+  })
+  .describe("Grading for a question. If you want to set grading, you must first set isQuiz to true with UpdateSettingsRequest.");
+
+/**
 * Supported operations for batch updates
 */
 export const SUPPORTED_OPERATIONS = [
@@ -107,6 +171,7 @@ export const CreateItemRequestSchema = z
     question_group_params: QuestionGroupParamsSchema.optional().describe(
       "Parameters specific to question group items",
     ),
+    grading: GradingSchema.optional().describe("Grading for the question"),
   })
   .describe("Request object for creating an item");
 
@@ -166,10 +231,6 @@ export const UpdateFormSettingsRequestSchema = z
         "Email collection type (DO_NOT_COLLECT: do not collect, VERIFIED: verified email, RESPONDER_INPUT: email input by respondent). Setting this to RESPONDER_INPUT automatically add a question to the form asking for the email address. Make sure not to have two email address questions in the form.",
       ),
     is_quiz: z.boolean().optional().describe("Whether it's in quiz format"),
-    release_grade: z
-      .enum(["NONE", "IMMEDIATELY", "LATER"])
-      .optional()
-      .describe("Grade release method"),
   })
   .describe("Request object for updating form settings");
 
