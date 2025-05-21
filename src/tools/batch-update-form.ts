@@ -29,7 +29,10 @@ export class BatchUpdateFormTool {
    * Tool description
    */
   readonly description =
-    `Execute multiple update operations on Google Forms in a single batch. You can add, update, delete, and move items all at once. Supported operations: ${SUPPORTED_OPERATIONS.join(", ")}`;
+    `Execute multiple update operations on Google Forms in a single batch. You can add, update, delete, and move items all at once. Supported operations: ${SUPPORTED_OPERATIONS.join(", ")}
+[Note]: 
+- If you want to provide created form url, use the url ending with "/viewform" instead of "/edit".
+- If you want to create a quiz form, first use the "update_form_settings" operation to set the form to quiz mode, and then use the "create_item" operation to add quiz items. You cannot set the form to quiz mode and create quiz items in the same request.`;
 
   /**
    * Tool parameter definitions
