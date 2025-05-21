@@ -123,7 +123,7 @@ export const UpdateItemRequestSchema = z
         `A comma-separated list of fully qualified names of fields. Example: "user.displayName,photo"`,
       ),
   })
-  .describe("Request object for updating an item");
+  .describe("Request object for updating an item. You can not convert to different item types. For example, a PageBreakItem cannot be changed into another Item type by an Update operation.");
 
 /**
  * Schema for delete item request in batch operations
