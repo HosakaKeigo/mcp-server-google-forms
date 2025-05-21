@@ -33,7 +33,7 @@ export const FormOptionSchema = z
   .object({
     value: z.string().describe("Option text value"),
     goToAction: GoToActionSchema.optional().describe(
-      "Branching action to take when this option is selected",
+      "Branching action to take when this option is selected. Either all or no options should be set with this property."
     ),
     goToSectionId: z
       .string()
