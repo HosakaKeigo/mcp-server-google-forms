@@ -26,7 +26,7 @@ export function extractFormId(formUrl: string): string {
       if (pathParts.length > 4 && pathParts[4]) {
         formId = pathParts[4];
       }
-    } 
+    }
     // Check for /d/{formId} pattern
     else if (pathParts[3] && pathParts[3] !== 'e') {
       // Make sure pathParts[3] is not an empty string and is not 'e'
@@ -36,10 +36,10 @@ export function extractFormId(formUrl: string): string {
     if (!formId) {
       throw new Error('Form ID not found in URL path');
     }
-    
+
     // Basic check to ensure formId is not something like 'edit' or 'viewform' if the path is too short
     if (formId === 'edit' || formId === 'viewform') {
-        throw new Error('Form ID not found in URL path');
+      throw new Error('Form ID not found in URL path');
     }
 
     return formId;

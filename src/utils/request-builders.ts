@@ -8,19 +8,19 @@ import type {
 } from "../types/request-types.js";
 
 /**
- * リクエストビルダー：アイテムの作成リクエストを生成
- * @param params パラメータ
- * @returns 作成リクエストオブジェクト
+ * Request builder: Generate create item request
+ * @param params Parameters
+ * @returns Create request object
  */
 export function buildCreateItemRequest(
   params: CreateItemRequestParams,
 ): forms_v1.Schema$Request | Error {
   try {
     if (!params.title) {
-      throw new Error("項目作成時はtitleが必須です");
+      throw new Error("Title is required when creating an item");
     }
 
-    // 項目データの構築
+    // Build item data
     const item: forms_v1.Schema$Item = {
       title: params.title,
     };
@@ -29,7 +29,7 @@ export function buildCreateItemRequest(
       item.description = params.description;
     }
 
-    // 項目タイプに基づいてデータを設定
+    // Set data based on item type
     switch (params.itemType) {
       case "text":
         item.textItem = {};
@@ -41,7 +41,7 @@ export function buildCreateItemRequest(
 
       case "question": {
         if (!params.questionType) {
-          throw new Error("質問項目作成時はquestionTypeが必須です");
+          throw new Error("questionType is required when creating a question item");
         }
 
         item.questionItem = {
@@ -57,16 +57,16 @@ export function buildCreateItemRequest(
             };
           }
         } else {
-          // 選択式の質問の場合、選択肢が必要
+          // For multiple-choice questions, options are required
           if (!params.options || params.options.length === 0) {
-            throw new Error("選択式質問には選択肢が必要です");
+            throw new Error("Multiple-choice questions require options");
           }
 
           const optionsArray: forms_v1.Schema$Option[] = params.options.map((opt: string) => ({
             value: opt,
           }));
 
-          // 「その他」オプションの追加
+          // Add "Other" option
           if (
             params.includeOther &&
             (params.questionType === "RADIO" || params.questionType === "CHECKBOX")
@@ -86,7 +86,7 @@ export function buildCreateItemRequest(
 
       case "questionGroup": {
         if (!params.rows || params.rows.length === 0) {
-          throw new Error("質問グループには少なくとも1つの行（質問）が必要です");
+          throw new Error("Question group requires at least one row (question)");
         }
         item.questionGroupItem = {
           questions: params.rows.map((row: { title: string; required?: boolean }) => ({
@@ -98,11 +98,11 @@ export function buildCreateItemRequest(
         };
         if (params.isGrid) {
           if (!params.columns || params.columns.length === 0) {
-            throw new Error("グリッド形式の質問グループには列（選択肢）が必要です");
+            throw new Error("Grid-style question group requires columns (options)");
           }
           if (!params.gridType) {
             throw new Error(
-              "グリッド形式の質問グループには選択タイプ（CHECKBOX または RADIO）が必要です",
+              "Grid-style question group requires a selection type (CHECKBOX or RADIO)",
             );
           }
           item.questionGroupItem.grid = {
@@ -117,7 +117,7 @@ export function buildCreateItemRequest(
       }
 
       default:
-        throw new Error(`不明な項目タイプ: ${params.itemType}`);
+        throw new Error(`Unknown item type: ${params.itemType}`);
     }
 
     return {
@@ -132,10 +132,10 @@ export function buildCreateItemRequest(
 }
 
 /**
- * リクエストビルダー：アイテムの更新リクエストを生成
- * @param params パラメータ
- * @param currentItem 現在の項目データ（requiredフィールドの更新チェック用）
- * @returns 更新リクエストオブジェクト
+ * Request builder: Generate update item request
+ * @param params Parameters
+ * @param currentItem Current item data (for checking required field updates)
+ * @returns Update request object
  */
 export function buildUpdateItemRequest(
   params: UpdateItemRequestParams,
@@ -145,7 +145,7 @@ export function buildUpdateItemRequest(
     const item: Partial<forms_v1.Schema$Item> = {};
     const updateMaskParts: string[] = [];
 
-    // 更新するフィールドを設定
+    // Set fields to update
     if (params.title !== undefined) {
       item.title = params.title;
       updateMaskParts.push("title");
@@ -156,7 +156,7 @@ export function buildUpdateItemRequest(
       updateMaskParts.push("description");
     }
 
-    // 質問項目の場合、必須設定を更新
+    // For question items, update the required setting
     if (params.required !== undefined) {
       if (currentItem?.questionItem) {
         if (!item.questionItem) {
@@ -168,13 +168,13 @@ export function buildUpdateItemRequest(
         item.questionItem.question.required = params.required;
         updateMaskParts.push("questionItem.question.required");
       } else {
-        throw new Error("requiredは質問項目にのみ設定できます");
+        throw new Error("The 'required' field can only be set for question items");
       }
     }
 
-    // 更新するフィールドがない場合はエラー
+    // Error if no fields to update
     if (updateMaskParts.length === 0) {
-      throw new Error("更新するフィールドが指定されていません");
+      throw new Error("No fields specified to update");
     }
 
     return {
@@ -190,9 +190,9 @@ export function buildUpdateItemRequest(
 }
 
 /**
- * リクエストビルダー：アイテムの削除リクエストを生成
- * @param params パラメータ
- * @returns 削除リクエストオブジェクト
+ * Request builder: Generate delete item request
+ * @param params Parameters
+ * @returns Delete request object
  */
 export function buildDeleteItemRequest(params: DeleteItemRequestParams): forms_v1.Schema$Request {
   return {
@@ -203,9 +203,9 @@ export function buildDeleteItemRequest(params: DeleteItemRequestParams): forms_v
 }
 
 /**
- * リクエストビルダー：アイテムの移動リクエストを生成
- * @param params パラメータ
- * @returns 移動リクエストオブジェクト
+ * Request builder: Generate move item request
+ * @param params Parameters
+ * @returns Move request object
  */
 export function buildMoveItemRequest(params: MoveItemRequestParams): forms_v1.Schema$Request {
   return {
@@ -217,9 +217,9 @@ export function buildMoveItemRequest(params: MoveItemRequestParams): forms_v1.Sc
 }
 
 /**
- * リクエストビルダー：フォーム情報の更新リクエストを生成
- * @param params パラメータ
- * @returns 更新リクエストオブジェクト
+ * Request builder: Generate update form info request
+ * @param params Parameters
+ * @returns Update request object
  */
 export function buildUpdateFormInfoRequest(
   params: UpdateFormInfoRequestParams,
@@ -238,9 +238,9 @@ export function buildUpdateFormInfoRequest(
       updateMaskParts.push("description");
     }
 
-    // 更新するフィールドがない場合はエラー
+    // Error if no fields to update
     if (updateMaskParts.length === 0) {
-      throw new Error("更新するフォーム情報が指定されていません");
+      throw new Error("No form information specified to update");
     }
 
     return {

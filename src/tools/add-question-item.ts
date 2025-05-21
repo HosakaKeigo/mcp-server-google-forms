@@ -5,22 +5,22 @@ import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 
 /**
- * フォームに質問項目を追加するMCPツール
+ * MCP tool to add a question item to a form
  */
 export class AddQuestionItemTool {
   /**
-   * ツール名
+   * Tool name
    */
   readonly name = "add_question_item";
 
   /**
-   * ツールの説明
+   * Tool description
    */
   readonly description =
-    "Google Formsに質問項目を追加します。テキスト型や選択式の質問を作成できます。";
+    "Add a question item to Google Forms. You can create text or multiple-choice questions.";
 
   /**
-   * ツールのパラメータ定義
+   * Tool parameter definitions
    */
   readonly parameters = {
     form_url: FormUrlSchema.describe(
@@ -30,47 +30,47 @@ export class AddQuestionItemTool {
     question_type: z
       .enum(["TEXT", "PARAGRAPH_TEXT", "RADIO", "CHECKBOX", "DROP_DOWN"])
       .describe(
-        "質問タイプ（TEXT:短文テキスト, PARAGRAPH_TEXT:長文テキスト, RADIO:ラジオボタン, CHECKBOX:チェックボックス, DROP_DOWN:ドロップダウン）",
+        "Question type (TEXT: short text, PARAGRAPH_TEXT: long text, RADIO: radio buttons, CHECKBOX: checkboxes, DROP_DOWN: dropdown)",
       ),
-    options: z.array(z.string()).optional().describe("選択肢（RADIO, CHECKBOX, DROP_DOWN"),
-    required: z.boolean().optional().default(false).describe("必須かどうか（省略時はfalse）"),
+    options: z.array(z.string()).optional().describe("Options (for RADIO, CHECKBOX, DROP_DOWN)"),
+    required: z.boolean().optional().default(false).describe("Whether the question is required (defaults to false)"),
     include_other: z
       .boolean()
       .optional()
       .default(false)
       .describe(
-        "「その他」オプションを含めるかどうか（RADIO, CHECKBOXの場合のみ有効、省略時はfalse）",
+        "Whether to include an 'Other' option (only valid for RADIO and CHECKBOX, defaults to false)",
       ),
-    index: z.number().optional().describe("挿入位置（省略時は末尾）"),
+    index: z.number().optional().describe("Insertion position (appends to the end if omitted)"),
   };
 
   /**
-   * ツールの実行
-   * @param args ツールの引数
-   * @returns ツールの実行結果
+   * Execute the tool
+   * @param args Tool arguments
+   * @returns Tool execution result
    */
   async execute(args: InferZodParams<typeof this.parameters>): Promise<{
     content: TextContent[];
     isError?: boolean;
   }> {
     try {
-      // フォームIDを抽出
+      // Extract form ID
       const formId = extractFormId(args.form_url);
 
-      // 選択式の質問の場合、選択肢が必要
+      // For multiple-choice questions, options are required
       if (
         (args.question_type === "RADIO" ||
           args.question_type === "CHECKBOX" ||
           args.question_type === "DROP_DOWN") &&
         (!args.options || args.options.length === 0)
       ) {
-        throw new Error(`${args.question_type}タイプの質問には選択肢が必要です`);
+        throw new Error(`Questions of type ${args.question_type} require options`);
       }
 
-      // サービスのインスタンス化
+      // Initialize service
       const service = new GFormService();
 
-      // 質問項目を追加
+      // Add question item
       await service.addQuestionItem(
         formId,
         args.title,
@@ -81,25 +81,25 @@ export class AddQuestionItemTool {
         args.index,
       );
 
-      // 質問タイプを日本語に変換
+      // Convert question type to display name
       const questionTypeMap = {
-        TEXT: "短文テキスト",
-        PARAGRAPH_TEXT: "長文テキスト",
-        RADIO: "ラジオボタン",
-        CHECKBOX: "チェックボックス",
-        DROP_DOWN: "ドロップダウン",
+        TEXT: "Short text",
+        PARAGRAPH_TEXT: "Paragraph text",
+        RADIO: "Radio buttons",
+        CHECKBOX: "Checkboxes",
+        DROP_DOWN: "Dropdown",
       };
 
       return {
         content: [
           {
             type: "text",
-            text: `質問項目 "${args.title}" (${questionTypeMap[args.question_type]}) をフォームに追加しました。${
-              args.required ? "（必須回答）" : ""
+            text: `Added question item "${args.title}" (${questionTypeMap[args.question_type]}) to the form. ${
+              args.required ? "(Required)" : ""
             }${
               args.include_other &&
               (args.question_type === "RADIO" || args.question_type === "CHECKBOX")
-                ? "（「その他」オプション付き）"
+                ? "(With 'Other' option)"
                 : ""
             }`,
           },
@@ -110,7 +110,7 @@ export class AddQuestionItemTool {
         content: [
           {
             type: "text",
-            text: `エラー: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,

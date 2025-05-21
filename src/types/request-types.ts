@@ -1,6 +1,6 @@
 import type { ItemType, QuestionType } from "./index.js";
 
-// Google Formsリクエスト用パラメータ型定義
+// Parameter type definitions for Google Forms requests
 
 export type CreateItemRequestParams = {
   title: string;
@@ -11,7 +11,7 @@ export type CreateItemRequestParams = {
   options?: string[];
   required?: boolean;
   includeOther?: boolean;
-  // question_group専用
+  // For question_group only
   rows?: { title: string; required?: boolean }[];
   isGrid?: boolean;
   columns?: string[];

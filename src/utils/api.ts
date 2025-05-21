@@ -127,7 +127,7 @@ export class GFormService {
         itemType: itemType.type,
       };
 
-      // 項目タイプに基づいてパラメータを追加
+      // Add parameters based on item type
       switch (itemType.type) {
         case "question": {
           const { questionType, options, required, includeOther } = itemType.data;
@@ -327,15 +327,15 @@ export class GFormService {
     index?: number,
   ) {
     if (!rows || rows.length === 0) {
-      throw new Error("質問グループには少なくとも1つの行（質問）が必要です");
+      throw new Error("Question group requires at least one row (question)");
     }
     if (isGrid) {
       if (!columns || columns.length === 0) {
-        throw new Error("グリッド形式の質問グループには列（選択肢）が必要です");
+        throw new Error("Grid-style question group requires columns (options)");
       }
       if (!gridType) {
         throw new Error(
-          "グリッド形式の質問グループには選択タイプ（CHECKBOX または RADIO）が必要です",
+          "Grid-style question group requires a selection type (CHECKBOX or RADIO)",
         );
       }
     }
@@ -358,11 +358,11 @@ export class GFormService {
   }
 
   /**
-   * フォームの設定を更新する
-   * @param formId フォームID
-   * @param settings 更新する設定
-   * @param updateMask 更新対象のフィールドを指定するマスク
-   * @returns 更新結果
+   * Update form settings
+   * @param formId Form ID
+   * @param settings Settings to update
+   * @param updateMask Mask specifying which fields to update
+   * @returns Update result
    */
   async updateSettings(
     formId: string,
@@ -387,17 +387,17 @@ export class GFormService {
       return await this.batchUpdateForm(formId, requests);
     } catch (error) {
       throw new Error(
-        `フォーム設定の更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while updating form settings: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * 新しいフォームを作成する
-   * @param title フォームのタイトル
-   * @param documentTitle ドキュメントのタイトル（省略時はtitleと同じ）
-   * @param unpublished 公開しないかどうか（trueの場合は回答を受け付けない）
-   * @returns フォーム作成結果
+   * Create a new form
+   * @param title Form title
+   * @param documentTitle Document title (same as title if omitted)
+   * @param unpublished Whether the form should not be published (if true, does not accept responses)
+   * @returns Form creation result
    */
   async createForm(title: string, documentTitle?: string, unpublished = false) {
     try {
@@ -407,7 +407,7 @@ export class GFormService {
         },
       };
 
-      // ドキュメントタイトルを設定（省略時はtitleと同じ）
+      // Set document title (same as title if omitted)
       if (documentTitle) {
         if (!form.info) {
           form.info = {};
@@ -423,24 +423,24 @@ export class GFormService {
       return result.data;
     } catch (error) {
       throw new Error(
-        `フォームの作成中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while creating form: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * フォームの項目を更新する
-   * @param formId フォームID
-   * @param index 更新する項目のインデックス
-   * @param item 更新する項目のデータ
-   * @param updateMask 更新対象のフィールドを指定するマスク
-   * @returns 更新結果
+   * Update a form item
+   * @param formId Form ID
+   * @param index Index of the item to update
+   * @param item Item data to update
+   * @param updateMask Mask specifying which fields to update
+   * @returns Update result
    */
   async updateItem(formId: string, index: number, item: forms_v1.Schema$Item) {
     try {
       const form = await this.getForm(formId);
       if (!form.items || index >= form.items.length) {
-        throw new Error(`インデックス ${index} の項目が見つかりません`);
+        throw new Error(`Item at index ${index} not found`);
       }
 
       const currentItem = form.items[index];
@@ -461,22 +461,22 @@ export class GFormService {
       return await this.batchUpdateForm(formId, [request]);
     } catch (error) {
       throw new Error(
-        `フォームの項目更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while updating form item: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * フォームに対して複数の操作を一括で行う
-   * @param formId フォームID
-   * @param requests 実行するリクエスト配列
-   * @returns 更新結果
+   * Perform multiple operations on a form in a batch
+   * @param formId Form ID
+   * @param requests Array of requests to execute
+   * @returns Update result
    */
   async batchUpdateForm(formId: string, requests: forms_v1.Schema$Request[]) {
     try {
-      // リクエストが空の場合はエラー
+      // Error if requests array is empty
       if (requests.length === 0) {
-        throw new Error("実行するリクエストがありません");
+        throw new Error("No requests to execute");
       }
 
       const result = await this.formClient.forms.batchUpdate({
@@ -489,7 +489,7 @@ export class GFormService {
       return result.data;
     } catch (error) {
       throw new Error(
-        `フォームの更新中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Error occurred while updating form: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
