@@ -235,18 +235,34 @@ export const UpdateFormSettingsRequestSchema = z
   .describe("Request object for updating form settings");
 
 /**
- * Schema for a single batch operation
+ * Schema for a single batch operation as a tagged union
  */
-export const BatchOperationSchema = z.object({
-  // Operation type
-  operation: OperationTypeSchema,
-  createItemRequest: CreateItemRequestSchema.optional(),
-  updateItemRequest: UpdateItemRequestSchema.optional(),
-  deleteItemRequest: DeleteItemRequestSchema.optional(),
-  moveItemRequest: MoveItemRequestSchema.optional(),
-  updateFormInfoRequest: UpdateFormInfoRequestSchema.optional(),
-  updateFormSettingsRequest: UpdateFormSettingsRequestSchema.optional(),
-});
+export const BatchOperationSchema = z.discriminatedUnion("operation", [
+  z.object({
+    operation: z.literal("create_item"),
+    createItemRequest: CreateItemRequestSchema,
+  }).describe("Create item operation"),
+  z.object({
+    operation: z.literal("update_item"),
+    updateItemRequest: UpdateItemRequestSchema,
+  }).describe("Update item operation"),
+  z.object({
+    operation: z.literal("delete_item"),
+    deleteItemRequest: DeleteItemRequestSchema,
+  }).describe("Delete item operation"),
+  z.object({
+    operation: z.literal("move_item"),
+    moveItemRequest: MoveItemRequestSchema,
+  }).describe("Move item operation"),
+  z.object({
+    operation: z.literal("update_form_info"),
+    updateFormInfoRequest: UpdateFormInfoRequestSchema,
+  }).describe("Update form info operation"),
+  z.object({
+    operation: z.literal("update_form_settings"),
+    updateFormSettingsRequest: UpdateFormSettingsRequestSchema,
+  }).describe("Update form settings operation"),
+]);
 
 /**
  * Schema for batch update form parameters
