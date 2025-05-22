@@ -105,6 +105,15 @@ Not implemented yet.
 ### Available Resources
 Not implemented yet.
 
+## ToDos
+- [ ] Add **imageItem**
+- [ ] Add **videoItem**
+- [ ] Add **scaleQuestion**
+- [ ] Add **dateQuestion**
+- [ ] Add **timeQuestion**
+- [ ] Add **fileUploadItem**
+- [ ] Add **ratingQuestion**
+
 ## License
 
 MIT
