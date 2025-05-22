@@ -1,7 +1,5 @@
 import type { forms_v1 } from "@googleapis/forms";
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
-import type { BatchUpdateOperation, InferZodParams } from "../types/index.js";
-import { BatchUpdateFormSchema, SUPPORTED_OPERATIONS } from "../types/schemas.js";
 import { GFormService } from "../utils/api.js";
 import { extractFormId } from "../utils/extract-form-id.js";
 import {
@@ -12,6 +10,8 @@ import {
   buildUpdateFormSettingsRequest,
   buildUpdateItemRequest,
 } from "../utils/request-builders.js";
+import { BatchUpdateFormSchema, SUPPORTED_OPERATIONS } from "../types/schemas.js";
+import type { BatchUpdateOperation, InferZodParams } from "../types/index.js";
 
 /**
  * MCP tool to batch update multiple items in a form
@@ -69,56 +69,38 @@ export class BatchUpdateFormTool {
           let request: forms_v1.Schema$Request | Error | undefined;
           switch (op.operation) {
             case "create_item": {
-              if (!op.createItemRequest) {
-                throw new Error(
-                  `Operation #${opIndex + 1}: createItemRequest is required when creating an item`,
-                );
-              }
               request = buildCreateItemRequest(op.createItemRequest);
               break;
             }
             case "update_item": {
-              if (op.updateItemRequest) {
-                // op.index から取得
-                const itemIndex = op.updateItemRequest.index;
+              const itemIndex = op.updateItemRequest.index;
 
-                if (itemIndex === undefined) {
-                  throw new Error(
-                    `Operation #${opIndex + 1}: index is required when updating an item`,
-                  );
-                }
-
-                if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
-                  throw new Error(`Operation #${opIndex + 1}: Index ${itemIndex} is out of range`);
-                }
-
-                if (!op.updateItemRequest.item) {
-                  throw new Error(
-                    `Operation #${opIndex + 1}: 'item' is required in updateItemRequest`,
-                  );
-                }
-
-                if (!op.updateItemRequest.update_mask) {
-                  throw new Error(
-                    `Operation #${opIndex + 1}: 'update_mask' is required in updateItemRequest`,
-                  );
-                }
-
-                request = buildUpdateItemRequest(op.updateItemRequest);
-              } else {
-                // 従来の形式はサポートしなくなったので、エラーを返す
+              if (itemIndex === undefined) {
                 throw new Error(
-                  `Operation #${opIndex + 1}: updateItemRequest is required for update_item operations`,
+                  `Operation #${opIndex + 1}: index is required when updating an item`,
                 );
               }
+
+              if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
+                throw new Error(`Operation #${opIndex + 1}: Index ${itemIndex} is out of range`);
+              }
+
+              if (!op.updateItemRequest.item) {
+                throw new Error(
+                  `Operation #${opIndex + 1}: 'item' is required in updateItemRequest`,
+                );
+              }
+
+              if (!op.updateItemRequest.update_mask) {
+                throw new Error(
+                  `Operation #${opIndex + 1}: 'update_mask' is required in updateItemRequest`,
+                );
+              }
+
+              request = buildUpdateItemRequest(op.updateItemRequest);
               break;
             }
             case "delete_item": {
-              if (!op.deleteItemRequest) {
-                throw new Error(
-                  `Operation #${opIndex + 1}: deleteItemRequest is required when deleting an item`,
-                );
-              }
               const itemIndex = op.deleteItemRequest.index;
               if (itemIndex < 0 || !form.items || itemIndex >= form.items.length) {
                 throw new Error(`Operation #${opIndex + 1}: Index ${itemIndex} is out of range`);
@@ -127,11 +109,6 @@ export class BatchUpdateFormTool {
               break;
             }
             case "move_item": {
-              if (!op.moveItemRequest) {
-                throw new Error(
-                  `Operation #${opIndex + 1}: moveItemRequest is required when moving an item`,
-                );
-              }
               const itemIndex = op.moveItemRequest.index;
               const newIndex = op.moveItemRequest.new_index;
 
@@ -145,25 +122,15 @@ export class BatchUpdateFormTool {
               break;
             }
             case "update_form_info": {
-              if (!op.updateFormInfoRequest) {
-                throw new Error(
-                  `Operation #${opIndex + 1}: updateFormInfoRequest is required when updating form info`,
-                );
-              }
               request = buildUpdateFormInfoRequest(op.updateFormInfoRequest);
               break;
             }
             case "update_form_settings": {
-              if (!op.updateFormSettingsRequest) {
-                throw new Error(
-                  `Operation #${opIndex + 1}: updateFormSettingsRequest is required when updating form settings`,
-                );
-              }
               request = buildUpdateFormSettingsRequest(op.updateFormSettingsRequest);
               break;
             }
             default:
-              throw new Error(`Operation #${opIndex + 1}: Unknown operation type: ${op.operation}`);
+              throw new Error(`Operation #${opIndex + 1}: Unknown operation type`);
           }
           if (request instanceof Error) {
             throw new Error(`Operation #${opIndex + 1}: ${request.message}`);
@@ -221,24 +188,19 @@ ${JSON.stringify(result.form, null, 2)}`,
   private formatOperation(op: BatchUpdateOperation): string {
     switch (op.operation) {
       case "create_item": {
-        if (!op.createItemRequest) {
-          throw new Error("createItemRequest is required");
-        }
         const req = op.createItemRequest;
-        let description = `Create item: type=${req.item_type}, title="${req.title}"${
-          req.index !== undefined ? `, position=${req.index}` : ""
-        }${
-          req.options
+        let description = `Create item: type=${req.item_type}, title="${req.title}"${req.index !== undefined ? `, position=${req.index}` : ""
+          }${req.options
             ? `, options=[${req.options
-                .map((o) => {
-                  let desc = `"${o.value}"`;
-                  if (o.goToAction) desc += ` (→${o.goToAction})`;
-                  else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
-                  return desc;
-                })
-                .join(", ")}]`
+              .map((o) => {
+                let desc = `"${o.value}"`;
+                if (o.goToAction) desc += ` (→${o.goToAction})`;
+                else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
+                return desc;
+              })
+              .join(", ")}]`
             : ""
-        }`;
+          }`;
 
         // Add grading information to description if present
         if (req.grading) {
@@ -252,30 +214,41 @@ ${JSON.stringify(result.form, null, 2)}`,
       }
 
       case "update_item": {
-        return `Update item: index=${op.updateItemRequest?.index}, fields: ${op.updateItemRequest?.update_mask}`;
+        return `Update item: index=${op.updateItemRequest.index}, fields: ${op.updateItemRequest.update_mask}`;
       }
 
       case "delete_item": {
-        return `Delete item: index=${op.deleteItemRequest?.index}`;
+        return `Delete item: index=${op.deleteItemRequest.index}`;
       }
 
       case "move_item": {
-        return `Move item: index=${op.moveItemRequest?.index} → ${op.moveItemRequest?.new_index}`;
+        return `Move item: index=${op.moveItemRequest.index} → ${op.moveItemRequest.new_index}`;
       }
 
       case "update_form_info": {
         const updates: string[] = [];
-        if (op.updateFormInfoRequest?.title !== undefined) {
+        if (op.updateFormInfoRequest.title !== undefined) {
           updates.push(`title="${op.updateFormInfoRequest.title}"`);
         }
-        if (op.updateFormInfoRequest?.description !== undefined) {
+        if (op.updateFormInfoRequest.description !== undefined) {
           updates.push(`description="${op.updateFormInfoRequest.description}"`);
         }
         return `Update form info: ${updates.join(", ")}`;
       }
 
+      case "update_form_settings": {
+        const updates: string[] = [];
+        if (op.updateFormSettingsRequest.email_collection_type !== undefined) {
+          updates.push(`email collection="${op.updateFormSettingsRequest.email_collection_type}"`);
+        }
+        if (op.updateFormSettingsRequest.is_quiz !== undefined) {
+          updates.push(`quiz mode=${op.updateFormSettingsRequest.is_quiz ? "enabled" : "disabled"}`);
+        }
+        return `Update form settings: ${updates.join(", ")}`;
+      }
+
       default:
-        return `Unknown operation: ${op.operation}`;
+        return "Unknown operation";
     }
   }
 }

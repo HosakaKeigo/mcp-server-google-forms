@@ -1,12 +1,6 @@
 import type { TextContent } from "@modelcontextprotocol/sdk/types.js";
 import type { z } from "zod";
-import type {
-  BatchOperationSchema,
-  FormOptionSchema,
-  GoToActionSchema,
-  ItemTypeSchema,
-  QuestionTypeSchema,
-} from "./schemas.js";
+import type { BatchOperationSchema, FormOptionSchema } from "./schemas.js";
 
 /**
  * Utility type to infer parameter types from Zod schema

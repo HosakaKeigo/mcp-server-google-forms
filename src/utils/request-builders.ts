@@ -40,6 +40,20 @@ export function buildCreateItemRequest(
         item.pageBreakItem = {};
         break;
 
+      case "image":
+        if (!params.imageItem) {
+          throw new Error("imageItem is required when creating an image item");
+        }
+        item.imageItem = params.imageItem;
+        break;
+
+      case "video":
+        if (!params.videoItem) {
+          throw new Error("videoItem is required when creating a video item");
+        }
+        item.videoItem = params.videoItem;
+        break;
+
       case "question": {
         if (!params.question_type) {
           throw new Error("questionType is required when creating a question item");

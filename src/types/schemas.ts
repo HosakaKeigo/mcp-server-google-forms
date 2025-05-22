@@ -9,7 +9,7 @@ export const FormUrlSchema = z.string().url();
  * Form item type schema
  */
 export const ItemTypeSchema = z
-  .enum(["text", "question", "pageBreak", "questionGroup"])
+  .enum(["text", "question", "pageBreak", "questionGroup", "image", "video"])
   .describe("Type of item to create");
 
 /**
@@ -43,6 +43,44 @@ export const FormOptionSchema = z
       ),
   })
   .describe("Form option with optional branching capability");
+
+
+/**
+ * Schema for media properties (common for image and video)
+ */
+const MediaPropertiesSchema = z.object({
+  alignment: z
+    .enum(["LEFT", "CENTER", "RIGHT"])
+    .optional()
+    .describe("Media alignment (default: CENTER)"),
+  width: z.number().optional().describe("Media width in pixels"),
+});
+
+/**
+ * Schema for image properties
+ */
+export const ImagePropertiesSchema = z
+  .object({
+    image: z.object({
+      sourceUri: z.string().describe("URL of the image source"),
+      altText: z.string().optional().describe("Alternative text for the image for accessibility"),
+      properties: MediaPropertiesSchema.optional().describe("Additional image properties")
+    }),
+  })
+  .describe("Properties specific to image items");
+
+/**
+ * Schema for video properties
+ */
+export const VideoPropertiesSchema = z
+  .object({
+    video: z.object({
+      youtubeUri: z.string().describe("YouTube URI for the video"),
+      properties: MediaPropertiesSchema.optional().describe("Additional video properties"),
+    }),
+    caption: z.string().optional().describe("Caption text to be displayed below the video"),
+  })
+  .describe("Properties specific to video items");
 
 /**
  * Extra material link schema for grading feedback
@@ -170,6 +208,8 @@ export const CreateItemRequestSchema = z
       "Parameters specific to question group items",
     ),
     grading: GradingSchema.optional().describe("Grading for the question"),
+    imageItem: ImagePropertiesSchema.optional().describe("Image properties for image items"),
+    videoItem: VideoPropertiesSchema.optional().describe("Video properties for video items"),
   })
   .describe("Request object for creating an item");
 
@@ -235,18 +275,34 @@ export const UpdateFormSettingsRequestSchema = z
   .describe("Request object for updating form settings");
 
 /**
- * Schema for a single batch operation
+ * Schema for a single batch operation as a tagged union
  */
-export const BatchOperationSchema = z.object({
-  // Operation type
-  operation: OperationTypeSchema,
-  createItemRequest: CreateItemRequestSchema.optional(),
-  updateItemRequest: UpdateItemRequestSchema.optional(),
-  deleteItemRequest: DeleteItemRequestSchema.optional(),
-  moveItemRequest: MoveItemRequestSchema.optional(),
-  updateFormInfoRequest: UpdateFormInfoRequestSchema.optional(),
-  updateFormSettingsRequest: UpdateFormSettingsRequestSchema.optional(),
-});
+export const BatchOperationSchema = z.discriminatedUnion("operation", [
+  z.object({
+    operation: z.literal("create_item"),
+    createItemRequest: CreateItemRequestSchema,
+  }).describe("Create item operation"),
+  z.object({
+    operation: z.literal("update_item"),
+    updateItemRequest: UpdateItemRequestSchema,
+  }).describe("Update item operation"),
+  z.object({
+    operation: z.literal("delete_item"),
+    deleteItemRequest: DeleteItemRequestSchema,
+  }).describe("Delete item operation"),
+  z.object({
+    operation: z.literal("move_item"),
+    moveItemRequest: MoveItemRequestSchema,
+  }).describe("Move item operation"),
+  z.object({
+    operation: z.literal("update_form_info"),
+    updateFormInfoRequest: UpdateFormInfoRequestSchema,
+  }).describe("Update form info operation"),
+  z.object({
+    operation: z.literal("update_form_settings"),
+    updateFormSettingsRequest: UpdateFormSettingsRequestSchema,
+  }).describe("Update form settings operation"),
+]);
 
 /**
  * Schema for batch update form parameters
