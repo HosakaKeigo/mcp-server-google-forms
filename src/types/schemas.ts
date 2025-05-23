@@ -143,8 +143,8 @@ export const GradingSchema = z
   .object({
     pointValue: z.number().int().describe("Point value for the question"),
     correctAnswers: CorrectAnswersSchema.optional().describe("Correct answers for the question"),
-    whenRight: FeedbackSchema.optional().describe("Feedback when the answer is correct"),
-    whenWrong: FeedbackSchema.optional().describe("Feedback when the answer is incorrect"),
+    whenRight: FeedbackSchema.optional().describe("Feedback when the answer is correct. IMPORTANT: This feedback can only be set for multiple choice questions that have correct answers provided."),
+    whenWrong: FeedbackSchema.optional().describe("Feedback when the answer is incorrect. IMPORTANT: This feedback can only be set for multiple choice questions that have correct answers provided."),
     generalFeedback: FeedbackSchema.optional().describe("General feedback for the question"),
   })
   .describe(
@@ -248,7 +248,7 @@ const QuestionGroupItemCreateRequestSchema = BaseItemSchema.extend({
  */
 const ImageItemCreateRequestSchema = BaseItemSchema.extend({
   item_type: z.literal("image"),
-  imageItem: ImagePropertiesSchema, 
+  imageItem: ImagePropertiesSchema,
 }).describe("Request to create an image item");
 
 /**
@@ -256,7 +256,7 @@ const ImageItemCreateRequestSchema = BaseItemSchema.extend({
  */
 const VideoItemCreateRequestSchema = BaseItemSchema.extend({
   item_type: z.literal("video"),
-  videoItem: VideoPropertiesSchema, 
+  videoItem: VideoPropertiesSchema,
 }).describe("Request to create a video item");
 
 /**
