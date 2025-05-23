@@ -30,7 +30,6 @@ export function buildCreateItemRequest(
       item.description = params.description;
     }
 
-    // Set data based on item type
     switch (params.item_type) {
       case "text":
         item.textItem = {};
@@ -203,7 +202,7 @@ export function buildCreateItemRequest(
       }
 
       default:
-        throw new Error(`Unknown item type: ${params.item_type}`);
+        throw new Error("Unknown item type");
     }
 
     return {

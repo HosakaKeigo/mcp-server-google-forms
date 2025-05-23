@@ -190,24 +190,58 @@ ${JSON.stringify(result.form, null, 2)}`,
       case "create_item": {
         const req = op.createItemRequest;
         let description = `Create item: type=${req.item_type}, title="${req.title}"${req.index !== undefined ? `, position=${req.index}` : ""
-          }${req.options
-            ? `, options=[${req.options
-              .map((o) => {
-                let desc = `"${o.value}"`;
-                if (o.goToAction) desc += ` (→${o.goToAction})`;
-                else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
-                return desc;
-              })
-              .join(", ")}]`
-            : ""
           }`;
 
-        // Add grading information to description if present
-        if (req.grading) {
-          description += `, points=${req.grading.pointValue}`;
-          if (req.grading.correctAnswers) {
-            description += `, correct answers=[${req.grading.correctAnswers.answers.map((a) => `"${a.value}"`).join(", ")}]`;
+        switch (req.item_type) {
+          case "question": {
+            if (req.options) {
+              description += `, options=[${req.options
+                .map((o) => {
+                  let desc = `"${o.value}"`;
+                  if (o.goToAction) desc += ` (→${o.goToAction})`;
+                  else if (o.goToSectionId) desc += ` (→Section:${o.goToSectionId})`;
+                  return desc;
+                })
+                .join(", ")}]`;
+            }
+
+            if (req.grading) {
+              description += `, points=${req.grading.pointValue}`;
+              if (req.grading.correctAnswers) {
+                description += `, correct answers=[${req.grading.correctAnswers.answers.map((a) => `"${a.value}"`).join(", ")}]`;
+              }
+            }
+
+            if (req.question_type) {
+              description += `, question_type=${req.question_type}`;
+            }
+            break;
           }
+          case "questionGroup": {
+            if (req.question_group_params) {
+              const params = req.question_group_params;
+              if (params.rows) {
+                description += `, rows=${params.rows.length}`;
+              }
+              if (params.is_grid) {
+                description += ", grid=true";
+              }
+            }
+            break;
+          }
+          case "image": {
+            if (req.imageItem?.image?.sourceUri) {
+              description += `, source=${req.imageItem.image.sourceUri}`;
+            }
+            break;
+          }
+          case "video": {
+            if (req.videoItem?.video?.youtubeUri) {
+              description += `, youtube=${req.videoItem.video.youtubeUri}`;
+            }
+            break;
+          }
+          // text and pageBreak don't need additional info
         }
 
         return description;
