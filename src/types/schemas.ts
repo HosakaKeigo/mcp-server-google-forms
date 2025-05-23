@@ -119,16 +119,19 @@ const FeedbackSchema = z
   .describe("Feedback for grading");
 
 /**
+ * Schema for a single answer value.
+ */
+const AnswerValueSchema = z.object({
+  value: z.string().describe("Answer value"),
+}).describe("Schema for a single answer value.");
+
+/**
  * Correct answers schema for grading
  */
 const CorrectAnswersSchema = z
   .object({
     answers: z
-      .array(
-        z.object({
-          value: z.string().describe("Correct answer value"),
-        }),
-      )
+      .array(AnswerValueSchema) // Use the new schema here
       .describe("List of correct answers"),
   })
   .describe("Correct answers for grading");
@@ -187,38 +190,155 @@ const QuestionGroupParamsSchema = z.object({
 });
 
 /**
+ * Base properties common to all form items.
+ */
+const BaseItemSchema = z.object({
+  title: z.string().describe("Item title"),
+  description: z.string().optional().describe("Item description"),
+  index: z.number().optional().describe("Insertion position (appends to the end if omitted)"),
+});
+
+/**
+ * Properties specific to question items.
+ */
+const QuestionSpecificSchema = z.object({
+  question_type: QuestionTypeSchema,
+  options: z
+    .array(FormOptionSchema)
+    .optional()
+    .describe("List of options with optional branching logic (relevant for RADIO, CHECKBOX, DROP_DOWN)"),
+  required: z.boolean().optional().describe("Whether the question is required"),
+  include_other: z.boolean().optional().describe("Whether to include an 'Other' option (relevant for certain question types)"),
+  grading: GradingSchema.optional().describe("Grading for the question"),
+});
+
+/**
+ * Request to create a text item.
+ */
+const TextItemCreateRequestSchema = BaseItemSchema.extend({
+  item_type: z.literal("text"),
+}).describe("Request to create a text item");
+
+/**
+ * Request to create a question item.
+ */
+const QuestionItemCreateRequestSchema = BaseItemSchema.extend({
+  item_type: z.literal("question"),
+})
+  .merge(QuestionSpecificSchema)
+  .describe("Request to create a question item");
+
+/**
+ * Request to create a page break item.
+ */
+const PageBreakItemCreateRequestSchema = BaseItemSchema.extend({
+  item_type: z.literal("pageBreak"),
+}).describe("Request to create a page break item");
+
+/**
+ * Request to create a question group item.
+ */
+const QuestionGroupItemCreateRequestSchema = BaseItemSchema.extend({
+  item_type: z.literal("questionGroup"),
+  question_group_params: QuestionGroupParamsSchema,
+}).describe("Request to create a question group item");
+
+/**
+ * Request to create an image item.
+ */
+const ImageItemCreateRequestSchema = BaseItemSchema.extend({
+  item_type: z.literal("image"),
+  imageItem: ImagePropertiesSchema, 
+}).describe("Request to create an image item");
+
+/**
+ * Request to create a video item.
+ */
+const VideoItemCreateRequestSchema = BaseItemSchema.extend({
+  item_type: z.literal("video"),
+  videoItem: VideoPropertiesSchema, 
+}).describe("Request to create a video item");
+
+/**
  * Schema for create item request in batch operations
  */
-export const CreateItemRequestSchema = z
-  .object({
-    title: z.string().describe("Item title"),
-    description: z.string().optional().describe("Item description"),
-    index: z.number().optional().describe("Insertion position (appends to the end if omitted)"),
-    item_type: ItemTypeSchema.describe("Type of item to create"),
-    question_type: QuestionTypeSchema.optional().describe(
-      "Type of question (required when creating question items)",
-    ),
-    options: z
-      .array(FormOptionSchema)
-      .optional()
-      .describe("List of options with optional branching logic"),
-    required: z.boolean().optional().describe("Whether the question is required"),
-    include_other: z.boolean().optional().describe("Whether to include an 'Other' option"),
-    question_group_params: QuestionGroupParamsSchema.optional().describe(
-      "Parameters specific to question group items",
-    ),
-    grading: GradingSchema.optional().describe("Grading for the question"),
-    imageItem: ImagePropertiesSchema.optional().describe("Image properties for image items"),
-    videoItem: VideoPropertiesSchema.optional().describe("Video properties for video items"),
-  })
-  .describe("Request object for creating an item");
+export const CreateItemRequestSchema = z.discriminatedUnion("item_type", [
+  TextItemCreateRequestSchema,
+  QuestionItemCreateRequestSchema,
+  PageBreakItemCreateRequestSchema,
+  QuestionGroupItemCreateRequestSchema,
+  ImageItemCreateRequestSchema,
+  VideoItemCreateRequestSchema,
+]).describe("Request object for creating an item");
+
+/**
+ * Represents a text item.
+ */
+const TextItemStateSchema = BaseItemSchema.extend({
+  item_type: z.literal("text"),
+}).describe("Represents a text item");
+
+/**
+ * Represents a question item.
+ */
+const QuestionItemStateSchema = BaseItemSchema.extend({
+  item_type: z.literal("question"),
+})
+  .merge(QuestionSpecificSchema)
+  .describe("Represents a question item");
+
+/**
+ * Represents a page break item.
+ */
+const PageBreakItemStateSchema = BaseItemSchema.extend({
+  item_type: z.literal("pageBreak"),
+}).describe("Represents a page break item");
+
+/**
+ * Represents a question group item.
+ */
+const QuestionGroupItemStateSchema = BaseItemSchema.extend({
+  item_type: z.literal("questionGroup"),
+  question_group_params: QuestionGroupParamsSchema, // This makes question_group_params non-optional
+}).describe("Represents a question group item");
+
+/**
+ * Represents an image item.
+ */
+const ImageItemStateSchema = BaseItemSchema.extend({
+  item_type: z.literal("image"),
+  imageItem: ImagePropertiesSchema, // This makes imageItem non-optional
+}).describe("Represents an image item");
+
+/**
+ * Represents a video item.
+ */
+const VideoItemStateSchema = BaseItemSchema.extend({
+  item_type: z.literal("video"),
+  videoItem: VideoPropertiesSchema, // This makes videoItem non-optional
+}).describe("Represents a video item");
+
+/**
+ * Represents any valid form item state.
+ */
+export const FormItemStateSchema = z.discriminatedUnion("item_type", [
+  TextItemStateSchema,
+  QuestionItemStateSchema,
+  PageBreakItemStateSchema,
+  QuestionGroupItemStateSchema,
+  ImageItemStateSchema,
+  VideoItemStateSchema,
+]).describe("Represents any valid form item state");
+
 
 /**
  * Schema for update item request in batch operations
  */
 export const UpdateItemRequestSchema = z
   .object({
-    item: z.any().describe("Full item object after update"),
+    item: FormItemStateSchema.describe(
+      "The full desired state of the item after the update. The update_mask determines which fields are actually changed.",
+    ),
     index: z.number().describe("Index of the item to update"),
     update_mask: z
       .string()
